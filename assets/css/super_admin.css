@@ -1,0 +1,287 @@
+/* Super Admin global layout */
+:root {
+    color-scheme: dark;
+}
+
+body {
+    background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 40%),
+        radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.6), transparent 50%),
+        #020617;
+    min-height: 100vh;
+}
+
+.sb-topnav {
+    background: linear-gradient(135deg, #020617, #020617, #020617) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.sb-topnav .navbar-brand {
+    color: #fff;
+}
+
+.sb-topnav .btn-link,
+.sb-topnav .nav-link,
+.sb-topnav .dropdown-menu a {
+    color: #e2e8f0;
+}
+
+#layoutSidenav {
+    min-height: calc(100vh - 56px);
+}
+
+.sb-sidenav {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.95));
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sb-sidenav .sb-sidenav-menu .nav-link {
+    color: #cbd5f5;
+}
+
+.sb-sidenav .sb-sidenav-menu .nav-link:hover,
+.sb-sidenav .sb-sidenav-menu .nav-link.active {
+    color: #fff;
+    background: rgba(13, 110, 253, 0.15);
+}
+
+.sb-sidenav-footer {
+    color: #94a3b8;
+    background: transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#layoutSidenav_content {
+    background: transparent;
+}
+
+.container-fluid,
+main {
+    color: #f8fafc;
+}
+
+.card,
+.card-body {
+    border-radius: 1.25rem;
+    background: rgba(2, 6, 23, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.55);
+}
+
+.card-title,
+.card-text,
+.breadcrumb,
+.btn {
+    color: #e2e8f0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    border: none;
+    box-shadow: 0 12px 30px rgba(13, 110, 253, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+}
+
+footer.py-4 {
+    background: linear-gradient(90deg, rgba(2, 6, 23, 0.95), rgba(15, 23, 42, 0.95));
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+footer.py-4 .text-muted {
+    color: #cbd5f5;
+}
+
+footer.py-4 a {
+    color: #93c5fd;
+}
+
+footer.py-4 a:hover {
+    color: #dbeafe;
+}
+
+@media (max-width: 992px) {
+    .sb-topnav {
+        border: none;
+    }
+}
+
+/* Super Admin dashboard */
+.super-admin-dashboard {
+    color: #f8fafc;
+}
+
+.super-admin-dashboard .card {
+    background: rgba(2, 6, 23, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: inherit;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.45);
+}
+
+.super-admin-dashboard .card-header {
+    background: rgba(15, 23, 42, 0.96) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+    color: #f9fafb;
+}
+
+.super-admin-dashboard .card-title,
+.super-admin-dashboard .text-muted {
+    color: #e5e7eb;
+}
+
+.super-admin-dashboard table {
+    color: #f9fafb;
+    background-color: transparent;
+}
+
+.super-admin-dashboard table thead th {
+    background-color: rgba(15, 23, 42, 0.96) !important;
+    color: #f9fafb !important;
+    border-color: rgba(148, 163, 184, 0.65);
+}
+
+.super-admin-dashboard table tbody tr {
+    background-color: rgba(15, 23, 42, 0.85);
+    border-color: rgba(148, 163, 184, 0.45);
+}
+
+.super-admin-dashboard table tbody tr:nth-child(odd) {
+    background-color: rgba(15, 23, 42, 0.9);
+}
+
+.super-admin-dashboard table td,
+.super-admin-dashboard table th {
+    color: #f9fafb;
+}
+
+.super-admin-dashboard .text-muted.small {
+    color: #e5e7eb;
+}
+
+/* Super Admin Program page */
+.super-admin-program {
+    color: #f8fafc;
+}
+
+.super-admin-program .card {
+    background: rgba(2, 6, 23, 0.9);
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.45);
+}
+
+.super-admin-program .card-header {
+    background: rgba(15, 23, 42, 0.96) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+    color: #f9fafb;
+}
+
+.super-admin-program .btn-primary {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    border: none;
+    box-shadow: 0 12px 30px rgba(13, 110, 253, 0.4);
+}
+
+.super-admin-program table {
+    color: #f9fafb;
+    background-color: transparent;
+}
+
+.super-admin-program table td,
+.super-admin-program table th {
+    padding: 0.85rem 1rem;
+    color: #f9fafb !important;
+}
+
+.super-admin-program thead th {
+    background-color: rgba(15, 23, 42, 0.96);
+    border-color: rgba(148, 163, 184, 0.65);
+    color: #f9fafb;
+}
+
+.super-admin-program tbody tr {
+    background-color: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.45);
+}
+
+.super-admin-program tbody tr:nth-child(odd) {
+    background-color: rgba(15, 23, 42, 0.85);
+}
+
+.super-admin-program .badge {
+    font-size: 0.75rem;
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+}
+
+.super-admin-program .dropdown-toggle::after {
+    display: none;
+}
+
+.super-admin-program .dropdown-menu {
+    background-color: #020617;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.7);
+}
+
+.super-admin-program .dropdown-item {
+    color: #e5e7eb;
+}
+
+.super-admin-program .dropdown-item-edit {
+    color: #facc15;
+}
+
+.super-admin-program .dropdown-item-toggle {
+    color: #60a5fa;
+}
+
+.super-admin-program .dropdown-item-delete {
+    color: #f97373;
+}
+
+.super-admin-program .dropdown-item:hover {
+    background-color: rgba(37, 99, 235, 0.35);
+    color: #f9fafb;
+}
+
+/* Datatables controls (length, search, info, pagination) */
+.super-admin-program .dataTables_wrapper .dataTables_length label,
+.super-admin-program .dataTables_wrapper .dataTables_filter label,
+.super-admin-program .dataTables_wrapper .dataTables_info {
+    color: #e5e7eb;
+}
+
+.super-admin-program .dataTables_wrapper .dataTables_length select,
+.super-admin-program .dataTables_wrapper .dataTables_filter input {
+    background-color: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    color: #f9fafb;
+    border-radius: 0.5rem;
+}
+
+.super-admin-program .dataTables_wrapper .dataTables_filter input::placeholder {
+    color: #9ca3af;
+}
+
+.super-admin-program .dataTables_wrapper .dataTables_paginate {
+    margin-top: 0.75rem;
+}
+
+.super-admin-program .dataTables_wrapper .dataTables_paginate .paginate_button.page-item .page-link {
+    color: #e5e7eb !important;
+    background-color: rgba(15, 23, 42, 0.96) !important;
+    border: 1px solid rgba(148, 163, 184, 0.6) !important;
+    border-radius: 999px !important;
+    padding: 0.25rem 0.75rem;
+    margin: 0 0.15rem;
+}
+
+.super-admin-program .dataTables_wrapper .dataTables_paginate .paginate_button.page-item.active .page-link,
+.super-admin-program .dataTables_wrapper .dataTables_paginate .paginate_button.page-item.active .page-link:hover {
+    color: #f9fafb !important;
+    background-color: #2563eb !important;
+    border-color: #60a5fa !important;
+}
+

@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 🚫 Blokir akses langsung ke file .env
+    <Files ".env">
+        Require all denied
+    </Files>
+
+    # 🚫 Blokir akses langsung ke file sensitif lain
+    <FilesMatch "(composer\.json|composer\.lock|\.gitignore|\.htaccess|\.ini|\.log|\.sh)$">
+        Require all denied
+    </FilesMatch>
+
+    # 🚫 Blokir folder application & system (CI3 core)
+    RewriteRule ^(application|system) - [F,L,NC]
+
+    # ✅ CI3 default routing
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?/$1 [L]
+</IfModule>
