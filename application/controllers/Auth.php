@@ -16,12 +16,17 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Auth extends MY_Controller
 {
     protected $AuthService;
+    protected $mkdkAllowedStatuses = ['Lulus', 'Proses', 'Belum Lulus'];
     protected $exclude_methods = [
         'login',
         'register_guru_page',
         'register_guru',
         'register_kepala_sekolah_page',
         'register_kepala_sekolah',
+        'register_mahasiswa_page',
+        'register_mahasiswa',
+        'get_faculties_for_registration',
+        'get_study_programs_for_registration',
     ];
     public function __construct()
     {
@@ -128,6 +133,216 @@ class Auth extends MY_Controller
         } catch (Exception $e) {
             response_error($e->getMessage(), $e, 422);
         }
+    }
+
+    // Page for student registration
+    public function register_mahasiswa_page()
+    {
+        $this->load->view("auth/register/mahasiswa");
+    }
+
+    // Process student registration
+    public function register_mahasiswa()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules([
+            ['field' => 'name', 'label' => 'Nama Mahasiswa', 'rules' => 'required|trim'],
+            ['field' => 'email', 'label' => 'Email', 'rules' => 'required|valid_email|trim'],
+            ['field' => 'nim', 'label' => 'NIM', 'rules' => 'required|exact_length[10]|numeric'],
+            ['field' => 'phone', 'label' => 'Nomor WhatsApp', 'rules' => 'required|trim'],
+            ['field' => 'faculty', 'label' => 'Fakultas', 'rules' => 'required|trim'],
+            ['field' => 'program_studi', 'label' => 'Program Studi', 'rules' => 'required|trim'],
+            ['field' => 'mkdk[filsafat_pendidikan]', 'label' => 'Filsafat Pendidikan', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
+            ['field' => 'mkdk[profesi_kependidikan]', 'label' => 'Profesi Kependidikan', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
+            ['field' => 'mkdk[perkembangan_peserta_didik]', 'label' => 'Perkembangan Peserta Didik', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
+            ['field' => 'mkdk[psikologi_pendidikan]', 'label' => 'Psikologi Pendidikan', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
+            ['field' => 'agreement_plp', 'label' => 'Pernyataan PLP', 'rules' => 'required'],
+            ['field' => 'agreement_tugas', 'label' => 'Pernyataan Tugas', 'rules' => 'required'],
+            ['field' => 'agreement_profesional', 'label' => 'Pernyataan Profesional', 'rules' => 'required'],
+            ['field' => 'agreement_etika', 'label' => 'Pernyataan Etika', 'rules' => 'required'],
+            ['field' => 'agreement_lapor', 'label' => 'Pernyataan Lapor', 'rules' => 'required'],
+            ['field' => 'statement_rewrite', 'label' => 'Penegasan Pernyataan', 'rules' => 'required|trim'],
+        ]);
+
+        if ($this->form_validation->run() === FALSE) {
+            response_error(strip_tags(validation_errors()), null, 422);
+            return;
+        }
+
+        try {
+            $this->db->trans_begin();
+
+            $name = trim($this->input->post('name', true));
+            $email = trim($this->input->post('email', true));
+            $nim = trim($this->input->post('nim', true));
+            $phone = trim($this->input->post('phone', true));
+            $faculty = trim($this->input->post('faculty', true));
+            $programStudi = trim($this->input->post('program_studi', true));
+            $mkdkInput = (array) $this->input->post('mkdk');
+            $mkdk = $this->normalizeMkdkStatuses($mkdkInput);
+
+            $this->ensureUniqueMahasiswa($email, $nim);
+
+            $activeProgramId = $this->getActiveProgramId();
+            $prodiId = $this->resolveProdiId($programStudi, $faculty);
+
+            $userData = [
+                'email'      => $email,
+                'username'   => $name,
+                'password'   => password_hash($nim, PASSWORD_BCRYPT),
+                'role'       => 'mahasiswa',
+                'fakultas'   => $faculty,
+                'has_change' => 0,
+                'id_program' => $activeProgramId,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+
+            $this->db->insert('users', $userData);
+            $userId = (int) $this->db->insert_id();
+
+            if ($userId <= 0) {
+                throw new Exception('Gagal membuat akun mahasiswa.');
+            }
+
+            $mahasiswaData = [
+                'id_user'    => $userId,
+                'nama'       => $name,
+                'nim'        => $nim,
+                'email'      => $email,
+                'no_hp'      => $phone,
+                'id_prodi'   => $prodiId,
+                'created_at' => date('Y-m-d H:i:s'),
+            ];
+
+            $this->db->insert('mahasiswa', $mahasiswaData);
+            $mahasiswaId = (int) $this->db->insert_id();
+
+            if ($mahasiswaId <= 0) {
+                throw new Exception('Gagal menyimpan data mahasiswa.');
+            }
+
+            $syaratData = [
+                'id_program'                 => $activeProgramId,
+                'id_mahasiswa'               => $mahasiswaId,
+                'filsafat_pendidikan'        => $mkdk['filsafat_pendidikan'],
+                'profesi_kependidikan'       => $mkdk['profesi_kependidikan'],
+                'perkembangan_peserta_didik' => $mkdk['perkembangan_peserta_didik'],
+                'psikologi_pendidikan'       => $mkdk['psikologi_pendidikan'],
+            ];
+            $this->db->insert('syarat_mapel', $syaratData);
+
+            $this->db->trans_commit();
+
+            response_json([
+                'message' => 'Pendaftaran mahasiswa berhasil dikirim. Silakan cek email secara berkala untuk informasi selanjutnya.'
+            ]);
+        } catch (Throwable $e) {
+            $this->db->trans_rollback();
+            response_error($e->getMessage(), $e, 422);
+        }
+    }
+
+    public function get_faculties_for_registration()
+    {
+        $faculties = $this->db->distinct()
+            ->select('fakultas')
+            ->from('prodi')
+            ->order_by('fakultas', 'ASC')
+            ->get()
+            ->result_array();
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($faculties));
+    }
+
+    public function get_study_programs_for_registration()
+    {
+        $faculty = $this->input->get('faculty', true);
+        if (empty($faculty)) {
+            response_error('Fakultas tidak valid', null, 422);
+            return;
+        }
+
+        $programs = $this->db->select('id, nama, fakultas')
+            ->from('prodi')
+            ->where('fakultas', $faculty)
+            ->order_by('nama', 'ASC')
+            ->get()
+            ->result_array();
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($programs));
+    }
+
+    private function ensureUniqueMahasiswa(string $email, string $nim): void
+    {
+        $emailExists = $this->db->where('email', $email)->count_all_results('users') > 0;
+        if ($emailExists) {
+            throw new Exception('Email sudah terdaftar pada sistem.');
+        }
+
+        $nimExists = $this->db->where('nim', $nim)->count_all_results('mahasiswa') > 0;
+        if ($nimExists) {
+            throw new Exception('NIM sudah terdaftar pada sistem.');
+        }
+    }
+
+    private function getActiveProgramId(): int
+    {
+        $program = $this->db->select('id')
+            ->from('program')
+            ->where('active', 1)
+            ->order_by('updated_at', 'DESC')
+            ->order_by('id', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$program) {
+            throw new Exception('Belum ada program aktif yang tersedia.');
+        }
+
+        return (int) $program->id;
+    }
+
+    private function resolveProdiId(string $prodiName, string $fakultas): int
+    {
+        $builder = $this->db->select('id')
+            ->from('prodi')
+            ->where('nama', $prodiName)
+            ->limit(1);
+
+        if ($fakultas !== '') {
+            $builder->where('fakultas', $fakultas);
+        }
+
+        $row = $builder->get()->row();
+        if (!$row) {
+            throw new Exception('Program studi tidak ditemukan pada fakultas tersebut.');
+        }
+
+        return (int) $row->id;
+    }
+
+    private function normalizeMkdkStatuses(array $input): array
+    {
+        $result = [];
+        $keys = ['filsafat_pendidikan', 'profesi_kependidikan', 'perkembangan_peserta_didik', 'psikologi_pendidikan'];
+
+        foreach ($keys as $key) {
+            $value = isset($input[$key]) ? $input[$key] : null;
+            $result[$key] = in_array($value, $this->mkdkAllowedStatuses, true) ? $value : 'Belum Lulus';
+        }
+
+        return $result;
     }
 
     public function update_password()

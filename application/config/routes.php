@@ -62,6 +62,10 @@ $route['register/guru'] = 'auth/register_guru_page';
 $route['register/guru/store'] = 'auth/register_guru';
 $route['register/kepala_sekolah'] = 'auth/register_kepala_sekolah_page';
 $route['register/kepala_sekolah/store'] = 'auth/register_kepala_sekolah';
+$route['register/mahasiswa'] = 'auth/register_mahasiswa_page';
+$route['register/mahasiswa/store'] = 'auth/register_mahasiswa';
+$route['register/mahasiswa/faculties'] = 'auth/get_faculties_for_registration';
+$route['register/mahasiswa/study-programs'] = 'auth/get_study_programs_for_registration';
 
 // utils
 $route['sekolah/select'] = 'utils/select_school';

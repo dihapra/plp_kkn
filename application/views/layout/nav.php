@@ -50,7 +50,7 @@ $roleToPath = [
                         <hr class="dropdown-divider" />
                     </li>
                 <?php endif; ?>
-                <li><a class="dropdown-item" href="<?= base_url('logout') ?>">Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="<?= base_url('logout') ?>">Logout</a></li>
             </ul>
         </li>
     </ul>

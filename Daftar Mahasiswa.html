@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrasi Mahasiswa PLP</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #ffffff;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px;
+    }
+    .container {
+      width: 650px;
+      background: #fff;
+      border: 1px solid #c8daf5;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      padding: 30px 40px;
+    }
+    h2 {
+      text-align: center;
+      color: #1e88e5;
+      margin-bottom: 25px;
+    }
+    label {
+      font-weight: 500;
+      display: block;
+      margin-top: 15px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #bcd4f0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    select:disabled {
+      background: #f1f1f1;
+    }
+    .section-box {
+      border: 1px solid #bcd4f0;
+      border-radius: 10px;
+      background: #f9fbff;
+      padding: 15px 20px;
+      margin-top: 20px;
+    }
+    .section-box h4 {
+      margin-top: 0;
+      color: #1e88e5;
+      text-align: center;
+    }
+    .mkdk-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .mkdk-item select {
+      width: 180px;
+    }
+    ol {
+      padding-left: 20px;
+    }
+    .statement-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .statement-item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+    textarea {
+      height: 80px;
+      resize: vertical;
+      margin-top: 8px;
+    }
+    button {
+      width: 100%;
+      margin-top: 25px;
+      background: #1e88e5;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #166dc2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Formulir Pendaftaran Mahasiswa PLP</h2>
+
+    <form>
+      <!-- DATA MAHASISWA -->
+      <div class="section-box">
+        <h4>DATA MAHASISWA</h4>
+
+        <label>Nama Mahasiswa</label>
+        <input type="text" id="nama" placeholder="Nama Mahasiswa" oninput="capitalizeName(this)" required>
+
+        <label>Email</label>
+        <input type="email" placeholder="email@domain.com" required>
+
+        <label>NIM</label>
+        <input type="text" id="nim" maxlength="10" pattern="[0-9]{10}" placeholder="10 digit angka" required>
+
+        <label>Fakultas</label>
+        <select id="fakultas" required onchange="updateProdi()">
+          <option value="">-- Pilih Fakultas --</option>
+          <option value="FIP">FIP</option>
+          <option value="FBS">FBS</option>
+          <option value="FIS">FIS</option>
+          <option value="FMIPA">FMIPA</option>
+          <option value="FT">FT</option>
+          <option value="FIK">FIK</option>
+          <option value="FE">FE</option>
+        </select>
+
+        <label>Program Studi</label>
+        <select id="prodi" required disabled>
+          <option value="">-- Pilih Prodi --</option>
+        </select>
+      </div>
+
+      <!-- STATUS MKDK -->
+      <div class="section-box mkdk-status">
+        <h4>STATUS MATA KULIAH DASAR KEPENDIDIKAN (MKDK)</h4>
+        <div class="mkdk-item">
+          <label>Filsafat Pendidikan</label>
+          <select required>
+            <option value="">-- Pilih Status --</option>
+            <option>Lulus</option>
+            <option>Proses</option>
+            <option>Belum Lulus</option>
+          </select>
+        </div>
+        <div class="mkdk-item">
+          <label>Profesi Kependidikan</label>
+          <select required>
+            <option value="">-- Pilih Status --</option>
+            <option>Lulus</option>
+            <option>Proses</option>
+            <option>Belum Lulus</option>
+          </select>
+        </div>
+        <div class="mkdk-item">
+          <label>Perkembangan Peserta Didik</label>
+          <select required>
+            <option value="">-- Pilih Status --</option>
+            <option>Lulus</option>
+            <option>Proses</option>
+            <option>Belum Lulus</option>
+          </select>
+        </div>
+        <div class="mkdk-item">
+          <label>Psikologi Pendidikan</label>
+          <select required>
+            <option value="">-- Pilih Status --</option>
+            <option>Lulus</option>
+            <option>Proses</option>
+            <option>Belum Lulus</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- PERNYATAAN -->
+      <div class="section-box">
+        <h4>PERNYATAAN MENGIKUTI PROGRAM PENGENALAN LAPANGAN PERSEKOLAHAN (PLP) I UNIVERSITAS NEGERI MEDAN TAHUN 2026</h4>
+        <p>Yang bertanda tangan di bawah ini:</p>
+        <p>Nama Lengkap : <span id="namaDisplay">-</span></p>
+        <p>NIM : <span id="nimDisplay">-</span></p>
+        <p>Program Studi : <span id="prodiDisplay">-</span></p>
+        <p>Fakultas : <span id="fakultasDisplay">-</span></p>
+
+        <p>Dengan ini menyatakan bahwa saya:</p>
+        <ol>
+          <li class="statement-item">Bersedia mengikuti Program Pengenalan Lapangan Persekolahan (PLP) I Tahun 2026 sesuai dengan ketentuan dan pedoman yang berlaku di Universitas Negeri Medan. <input type="checkbox" required></li>
+          <li class="statement-item">Akan melaksanakan tugas dan kewajiban sebagai peserta PLP II dengan penuh tanggung jawab. <input type="checkbox" required></li>
+          <li class="statement-item">Menyadari bahwa kegiatan ini merupakan bagian penting dari proses pembelajaran untuk mempersiapkan saya sebagai calon pendidik yang profesional. <input type="checkbox" required></li>
+          <li class="statement-item">Akan menjaga nama baik universitas dan institusi tempat saya melaksanakan PLP II, serta mengikuti semua aturan yang berlaku selama program berlangsung. <input type="checkbox" required></li>
+          <li class="statement-item">Jika terjadi hal-hal yang menghalangi saya untuk mengikuti kegiatan ini, saya akan memberitahukannya kepada Divisi PLP LPPM Universitas Negeri Medan sesuai dengan prosedur yang berlaku. <input type="checkbox" required></li>
+        </ol>
+
+        <p>Demikian pernyataan ini saya buat dengan sebenar-benarnya tanpa ada paksaan dari pihak manapun.</p>
+        <textarea placeholder="Ketik ulang kalimat di atas sebagai tanda persetujuan..." required></textarea>
+      </div>
+
+      <button type="submit">Daftar</button>
+    </form>
+  </div>
+
+  <script>
+    function capitalizeName(input) {
+      input.value = input.value.replace(/\b\w/g, c => c.toUpperCase());
+      document.getElementById("namaDisplay").textContent = input.value || "-";
+    }
+
+    function updateProdi() {
+      const fakultas = document.getElementById("fakultas").value;
+      const prodi = document.getElementById("prodi");
+      const data = {
+        FIP: ["Administrasi Pendidikan", "Bimbingan Konseling", "Pendidikan Guru SD", "Pendidikan Luar Sekolah"],
+        FBS: ["Pendidikan Bahasa Indonesia", "Pendidikan Bahasa Inggris", "Sastra Indonesia"],
+        FIS: ["Pendidikan Sejarah", "Pendidikan Sosiologi", "Pendidikan Geografi"],
+        FMIPA: ["Pendidikan Matematika", "Pendidikan Fisika", "Pendidikan Biologi", "Pendidikan Kimia"],
+        FT: ["Pendidikan Teknik Mesin", "Pendidikan Teknik Elektro", "Pendidikan Tata Boga"],
+        FIK: ["Pendidikan Jasmani", "Ilmu Keolahragaan"],
+        FE: ["Pendidikan Ekonomi", "Manajemen", "Akuntansi"]
+      };
+
+      prodi.innerHTML = '<option value="">-- Pilih Prodi --</option>';
+      if (data[fakultas]) {
+        data[fakultas].forEach(p => {
+          const option = document.createElement("option");
+          option.value = p;
+          option.textContent = p;
+          prodi.appendChild(option);
+        });
+        prodi.disabled = false;
+      } else {
+        prodi.disabled = true;
+      }
+
+      document.getElementById("fakultasDisplay").textContent = fakultas || "-";
+      document.getElementById("prodiDisplay").textContent = "-";
+    }
+
+    document.getElementById("prodi").addEventListener("change", e => {
+      document.getElementById("prodiDisplay").textContent = e.target.value || "-";
+    });
+
+    document.getElementById("nim").addEventListener("input", e => {
+      e.target.value = e.target.value.replace(/\D/g, '');
+      document.getElementById("nimDisplay").textContent = e.target.value || "-";
+    });
+  </script>
+</body>
+</html>

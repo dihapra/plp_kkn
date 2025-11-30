@@ -185,6 +185,9 @@
                     <a href="<?= base_url('register/kepala_sekolah'); ?>" class="btn btn-outline-success">
                         Daftar sebagai Kepala Sekolah
                     </a>
+                    <a href="<?= base_url('register/mahasiswa'); ?>" class="btn btn-outline-info">
+                        Daftar sebagai Mahasiswa PLP
+                    </a>
                 </div>
             </div>
         </div>
