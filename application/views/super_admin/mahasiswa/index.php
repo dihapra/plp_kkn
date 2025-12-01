@@ -2,7 +2,7 @@
     <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
         <div>
             <h3 class="mb-1">Daftar Mahasiswa</h3>
-            <p class="mb-0 text-muted">Kelola akun mahasiswa beserta prodi dan sekolah penempatan.</p>
+            <p class="mb-0 text-muted">Kelola akun mahasiswa beserta program studi.</p>
         </div>
         <button type="button" class="btn btn-primary" id="btnAddMahasiswa">
             <i class="bi bi-plus-lg me-1"></i>
@@ -19,12 +19,11 @@
                 <table id="dataTable" class="table table-sm mb-0 align-middle w-100">
                     <thead>
                         <tr>
-                            <th style="width: 20%;">Nama</th>
+                            <th style="width: 22%;">Nama</th>
                             <th style="width: 15%;">NIM</th>
                             <th style="width: 20%;">Email</th>
                             <th style="width: 15%;">No HP</th>
-                            <th style="width: 15%;">Prodi</th>
-                            <th style="width: 10%;">Sekolah</th>
+                            <th style="width: 23%;">Prodi</th>
                             <th class="text-end" style="width: 5%;">Aksi</th>
                         </tr>
                     </thead>
@@ -67,7 +66,6 @@
                 { data: 'email', orderable: true },
                 { data: 'no_hp', orderable: true },
                 { data: 'nama_prodi', orderable: true },
-                { data: 'nama_sekolah', orderable: true },
                 {
                     data: 'id',
                     orderable: false,
@@ -104,7 +102,6 @@
             $('#mahasiswa_no_hp').val('');
             $('#mahasiswa_fakultas').val('').trigger('change');
             $('#mahasiswa_prodi').val('').trigger('change');
-            $('#mahasiswa_sekolah').val('').trigger('change');
         }
 
         function openCreateModal() {
@@ -125,7 +122,6 @@
             $('#mahasiswa_fakultas')
                 .val(fakultasValue)
                 .trigger('change', { desiredValue: prodiValue });
-            $('#mahasiswa_sekolah').val(rowData.id_sekolah || '').trigger('change');
             $('#mahasiswaModalTitle').text('Edit Mahasiswa');
             $('#mahasiswaSubmitBtn').text('Simpan Perubahan');
             mahasiswaModal.show();
@@ -266,17 +262,6 @@
                             <option value="">Pilih Prodi</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="mahasiswa_sekolah" class="form-label">Sekolah</label>
-                        <select
-                            class="form-select sa-school-select"
-                            id="mahasiswa_sekolah"
-                            name="id_sekolah"
-                            data-placeholder="Pilih Sekolah"
-                            required>
-                            <option value="">Pilih Sekolah</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -286,4 +271,3 @@
         </div>
     </div>
 </div>
-

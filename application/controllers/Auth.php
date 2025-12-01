@@ -217,6 +217,7 @@ class Auth extends MY_Controller
                 'email'      => $email,
                 'no_hp'      => $phone,
                 'id_prodi'   => $prodiId,
+                'status'     => 'unverified',
                 'created_at' => date('Y-m-d H:i:s'),
             ];
 

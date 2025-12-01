@@ -30,6 +30,7 @@ class Mahasiswa
             mahasiswa.no_hp,
             mahasiswa.id_prodi,
             mahasiswa.id_sekolah,
+            mahasiswa.status,
             prodi.nama AS nama_prodi,
             prodi.fakultas AS fakultas,
             sekolah.nama AS nama_sekolah
@@ -79,4 +80,3 @@ class Mahasiswa
             ->row();
     }
 }
-

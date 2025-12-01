@@ -38,6 +38,7 @@ class MahasiswaCase extends BaseCase
 
             $data['id_user']    = $userId;
             $data['created_at'] = date('Y-m-d H:i:s');
+            $data['status']     = 'verified';
 
             $this->MahasiswaRepository->create($data);
 
@@ -115,6 +116,7 @@ class MahasiswaCase extends BaseCase
                 'nama_prodi'    => $r->nama_prodi,
                 'id_sekolah'    => $r->id_sekolah,
                 'nama_sekolah'  => $r->nama_sekolah,
+                'status'        => $r->status,
             ];
         }
 
@@ -128,21 +130,25 @@ class MahasiswaCase extends BaseCase
         $email     = isset($input['email']) ? trim($input['email']) : '';
         $noHp      = isset($input['no_hp']) ? trim($input['no_hp']) : null;
         $idProdi   = isset($input['id_prodi']) ? (int) $input['id_prodi'] : 0;
-        $idSekolah = isset($input['id_sekolah']) ? (int) $input['id_sekolah'] : 0;
+        $idSekolah = isset($input['id_sekolah']) && $input['id_sekolah'] !== '' ? (int) $input['id_sekolah'] : null;
 
-        if ($nama === '' || $nim === '' || $email === '' || $idProdi <= 0 || $idSekolah <= 0) {
-            throw new \InvalidArgumentException('Nama, NIM, email, prodi, dan sekolah wajib diisi.');
+        if ($nama === '' || $nim === '' || $email === '' || $idProdi <= 0) {
+            throw new \InvalidArgumentException('Nama, NIM, email, dan prodi wajib diisi.');
         }
 
-        return [
+        $data = [
             'nama'       => $nama,
             'nim'        => $nim,
             'email'      => $email,
             'no_hp'      => $noHp,
             'id_prodi'   => $idProdi,
-            'id_sekolah' => $idSekolah,
             'updated_at' => date('Y-m-d H:i:s'),
         ];
+
+        if (!empty($idSekolah) && $idSekolah > 0) {
+            $data['id_sekolah'] = $idSekolah;
+        }
+
+        return $data;
     }
 }
-
