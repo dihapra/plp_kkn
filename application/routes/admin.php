@@ -1,5 +1,9 @@
 <?php
 
+$route['admin'] = 'admin/index';
+$route['admin/program'] = 'admin/program';
+$route['admin/program/select'] = 'admin/set_program';
+
 $route['admin/mahasiswa/insert'] = 'admincontroller/student/insert_page';
 $route['admin/mahasiswa/simpan'] = 'admincontroller/student/create';
 $route['admin/mahasiswa/edit/(:num)'] = 'admincontroller/student/show/$1';

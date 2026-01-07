@@ -170,22 +170,43 @@
 
             Swal.fire({
                 icon: 'warning',
-                title: 'Hapus Sekolah (simulasi)?',
+                title: 'Hapus Sekolah?',
                 text: `Sekolah "${rowData.nama}" akan dihapus.`,
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
                 confirmButtonText: 'Ya, hapus',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
+            }).then(async (result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${baseUrl}super-admin/sekolah/delete/${rowData.id}`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        const message = result?.message || 'Gagal menghapus sekolah.';
+                        throw new Error(message);
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Terhapus',
-                        text: 'Sekolah berhasil dihapus (simulasi).',
+                        text: result?.message || 'Sekolah berhasil dihapus.',
                         timer: 1500,
                         showConfirmButton: false
+                    }).then(() => {
+                        table.ajax.reload(null, false);
                     });
-                    table.ajax.reload(null, false);
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: error.message || 'Terjadi kesalahan.'
+                    });
                 }
             });
         });
@@ -209,7 +230,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="school_alamat" class="form-label">Alamat</label>
-                        <textarea class="form-control" id="school_alamat" name="alamat" rows="3" required></textarea>
+                        <textarea class="form-control" id="school_alamat" name="alamat" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0">

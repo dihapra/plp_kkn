@@ -58,38 +58,65 @@ $activeProdiId = $activeProdi->id ?? 0;
                 <h5 class="modal-title" id="kaprodiDosenModalLabel">Tambah Dosen</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="kaprodiDosenForm">
-                <div class="modal-body">
-                    <input type="hidden" id="kaprodiDosenId" name="id">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="kaprodiDosenNama" class="form-label">Nama</label>
-                            <input type="text" class="form-control" id="kaprodiDosenNama" name="nama" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="kaprodiDosenNidn" class="form-label">NIP / NIDN</label>
-                            <input type="text" class="form-control" id="kaprodiDosenNidn" name="nidn" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="kaprodiDosenEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="kaprodiDosenEmail" name="email" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="kaprodiDosenHp" class="form-label">No HP</label>
-                            <input type="text" class="form-control" id="kaprodiDosenHp" name="no_hp">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Program Studi</label>
-                            <input type="text" class="form-control" value="<?= $activeProdiName ?>" readonly>
-                            <input type="hidden" id="kaprodiDosenProdi" name="id_prodi" value="<?= (int) $activeProdiId ?>">
-                        </div>
+            <div class="modal-body pt-0">
+                <ul class="nav nav-tabs" id="kaprodiDosenTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="kaprodiDosenTabInsert" data-bs-toggle="tab" data-bs-target="#kaprodiDosenTabPaneInsert" type="button" role="tab" aria-controls="kaprodiDosenTabPaneInsert" aria-selected="true">Input</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="kaprodiDosenTabImport" data-bs-toggle="tab" data-bs-target="#kaprodiDosenTabPaneImport" type="button" role="tab" aria-controls="kaprodiDosenTabPaneImport" aria-selected="false">Import</button>
+                    </li>
+                </ul>
+                <div class="tab-content pt-3">
+                    <div class="tab-pane fade show active" id="kaprodiDosenTabPaneInsert" role="tabpanel" aria-labelledby="kaprodiDosenTabInsert">
+                        <form id="kaprodiDosenForm">
+                            <input type="hidden" id="kaprodiDosenId" name="id">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="kaprodiDosenNama" class="form-label">Nama</label>
+                                    <input type="text" class="form-control" id="kaprodiDosenNama" name="nama" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kaprodiDosenNidn" class="form-label">NIP / NIDN</label>
+                                    <input type="text" class="form-control" id="kaprodiDosenNidn" name="nidn" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kaprodiDosenEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="kaprodiDosenEmail" name="email" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kaprodiDosenHp" class="form-label">No HP</label>
+                                    <input type="text" class="form-control" id="kaprodiDosenHp" name="no_hp">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Program Studi</label>
+                                    <input type="text" class="form-control" value="<?= $activeProdiName ?>" readonly>
+                                    <input type="hidden" id="kaprodiDosenProdi" name="id_prodi" value="<?= (int) $activeProdiId ?>">
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 px-0 pb-0">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary" id="kaprodiDosenSubmit">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="kaprodiDosenTabPaneImport" role="tabpanel" aria-labelledby="kaprodiDosenTabImport">
+                        <form id="kaprodiDosenImportForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="kaprodiDosenImportFile" class="form-label">File XLSX</label>
+                                <input type="file" class="form-control" id="kaprodiDosenImportFile" name="importFile" accept=".xlsx" required>
+                                <small class="text-muted d-block mt-2">Format: A = nama, B = NIP/NIDN, C = email, D = no hp.</small>
+                            </div>
+                            <div class="modal-footer border-0 px-0 pb-0">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-upload me-1"></i> Import
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" id="kaprodiDosenSubmit">Simpan</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -174,16 +201,27 @@ $activeProdiId = $activeProdi->id ?? 0;
 
         const modalEl = document.getElementById('kaprodiDosenModal');
         const dosenModal = new bootstrap.Modal(modalEl);
+        const insertTabEl = document.getElementById('kaprodiDosenTabInsert');
 
         function resetForm() {
             $('#kaprodiDosenForm')[0].reset();
             $('#kaprodiDosenId').val('');
         }
 
+        function showInsertTab() {
+            if (!insertTabEl) {
+                return;
+            }
+            const tab = new bootstrap.Tab(insertTabEl);
+            tab.show();
+        }
+
         function openCreateModal() {
             resetForm();
+            $('#kaprodiDosenImportForm')[0]?.reset();
             $('#kaprodiDosenModalLabel').text('Tambah Dosen');
             $('#kaprodiDosenSubmit').text('Simpan');
+            showInsertTab();
             dosenModal.show();
         }
 
@@ -197,6 +235,8 @@ $activeProdiId = $activeProdi->id ?? 0;
             $('#kaprodiDosenProdi').val(rowData.id_prodi || '');
             $('#kaprodiDosenModalLabel').text('Edit Dosen');
             $('#kaprodiDosenSubmit').text('Simpan Perubahan');
+            $('#kaprodiDosenImportForm')[0]?.reset();
+            showInsertTab();
             dosenModal.show();
         }
 
@@ -290,6 +330,45 @@ $activeProdiId = $activeProdi->id ?? 0;
                     title: isUpdate ? 'Diperbarui' : 'Tersimpan',
                     text: result?.message || (isUpdate ? 'Data dosen berhasil diperbarui.' : 'Data dosen berhasil disimpan.'),
                     timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    dosenModal.hide();
+                    table.ajax.reload(null, false);
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: error.message || 'Terjadi kesalahan.'
+                });
+            }
+        });
+
+        $('#kaprodiDosenImportForm').on('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(`${baseUrl}kaprodi/dosen/import`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result?.message || 'Gagal mengimpor data dosen.');
+                }
+
+                const success = result?.data?.success ?? 0;
+                const failed = result?.data?.failed ?? 0;
+                const detail = failed > 0
+                    ? `Berhasil ${success} data. Gagal ${failed} baris.`
+                    : (result?.message || 'Data dosen berhasil diimpor.');
+
+                Swal.fire({
+                    icon: failed > 0 ? 'warning' : 'success',
+                    title: failed > 0 ? 'Selesai dengan catatan' : 'Berhasil',
+                    text: detail,
+                    timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
                     dosenModal.hide();

@@ -91,4 +91,29 @@ class Program
             ->get()
             ->result_array();
     }
+
+    public function list_active(): array
+    {
+        return $this->db
+            ->select('id, nama, kode, tahun_ajaran')
+            ->from('program')
+            ->where('active', 1)
+            ->order_by('tahun_ajaran', 'DESC')
+            ->get()
+            ->result_array();
+    }
+
+    public function get_first_active_id(): ?int
+    {
+        $row = $this->db
+            ->select('id')
+            ->from('program')
+            ->where('active', 1)
+            ->order_by('tahun_ajaran', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row();
+
+        return $row ? (int) $row->id : null;
+    }
 }

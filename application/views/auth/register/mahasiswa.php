@@ -152,6 +152,11 @@
             margin-bottom: 0.75rem;
         }
 
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -163,10 +168,28 @@
                 transform: translateY(0);
             }
         }
+
+        .mkdk-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .mkdk-options .form-check {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 
 <body>
+    <?php
+    $mkdkStatuses = ['Lulus', 'Proses', 'Belum Lulus'];
+    $activeProgramName = (isset($activeProgram) && isset($activeProgram['nama'])) ? trim($activeProgram['nama']) : null;
+    $activeProgramYear = (isset($activeProgram) && isset($activeProgram['tahun_ajaran'])) ? trim($activeProgram['tahun_ajaran']) : null;
+    $activeProgramLabel = $activeProgramName
+        ? $activeProgramName . ($activeProgramYear ? " ({$activeProgramYear})" : '')
+        : 'Program belum tersedia';
+    ?>
     <div class="register-wrapper">
         <aside class="hero-panel">
             <div>
@@ -230,6 +253,18 @@
                                     required>
                             </div>
                             <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold" for="studentReligion">Agama</label>
+                                <select class="form-select" id="studentReligion" name="religion" required>
+                                    <option value="">-- Pilih Agama --</option>
+                                    <option value="Islam">Islam</option>
+                                    <option value="Kristen Protestan">Kristen Protestan</option>
+                                    <option value="Katolik">Katolik</option>
+                                    <option value="Hindu">Hindu</option>
+                                    <option value="Buddha">Buddha</option>
+                                    <option value="Konghucu">Konghucu</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold" for="facultySelect">Fakultas</label>
                                 <select class="form-select" id="facultySelect" name="faculty" required>
                                     <option value="">-- Pilih Fakultas --</option>
@@ -241,6 +276,10 @@
                                     <option value="">-- Pilih Prodi --</option>
                                 </select>
                             </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Program Aktif</label>
+                                <input type="text" class="form-control" value="<?= $activeProgramLabel; ?>" disabled>
+                            </div>
                         </div>
                         <div class="text-end mt-3">
                             <button type="button" class="btn btn-primary next-step">Lanjut</button>
@@ -250,40 +289,57 @@
                     <div class="step" id="step-2">
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">Filsafat Pendidikan</label>
-                                <select class="form-select" name="mkdk[filsafat_pendidikan]" required>
-                                    <option value="">-- Pilih Status --</option>
-                                    <option value="Lulus">Lulus</option>
-                                    <option value="Proses">Proses</option>
-                                    <option value="Belum Lulus">Belum Lulus</option>
-                                </select>
+                                <label class="form-label fw-semibold" for="totalSks">Total SKS</label>
+                                <input type="number" class="form-control" id="totalSks" name="total_sks" min="0" placeholder="Contoh: 90" required>
+                                <div class="form-text">Masukkan total SKS yang sudah ditempuh.</div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">Profesi Kependidikan</label>
-                                <select class="form-select" name="mkdk[profesi_kependidikan]" required>
-                                    <option value="">-- Pilih Status --</option>
-                                    <option value="Lulus">Lulus</option>
-                                    <option value="Proses">Proses</option>
-                                    <option value="Belum Lulus">Belum Lulus</option>
-                                </select>
+                                <label class="form-label fw-semibold d-block">Filsafat Pendidikan</label>
+                                <div class="mkdk-options">
+                                    <?php foreach ($mkdkStatuses as $status): ?>
+                                        <?php $id = 'mkdk-filsafat-' . strtolower(str_replace(' ', '-', $status)); ?>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="mkdk[filsafat_pendidikan]" id="<?= $id ?>" value="<?= $status ?>" required>
+                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">Perkembangan Peserta Didik</label>
-                                <select class="form-select" name="mkdk[perkembangan_peserta_didik]" required>
-                                    <option value="">-- Pilih Status --</option>
-                                    <option value="Lulus">Lulus</option>
-                                    <option value="Proses">Proses</option>
-                                    <option value="Belum Lulus">Belum Lulus</option>
-                                </select>
+                                <label class="form-label fw-semibold d-block">Profesi Kependidikan</label>
+                                <div class="mkdk-options">
+                                    <?php foreach ($mkdkStatuses as $status): ?>
+                                        <?php $id = 'mkdk-profesi-' . strtolower(str_replace(' ', '-', $status)); ?>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="mkdk[profesi_kependidikan]" id="<?= $id ?>" value="<?= $status ?>" required>
+                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">Psikologi Pendidikan</label>
-                                <select class="form-select" name="mkdk[psikologi_pendidikan]" required>
-                                    <option value="">-- Pilih Status --</option>
-                                    <option value="Lulus">Lulus</option>
-                                    <option value="Proses">Proses</option>
-                                    <option value="Belum Lulus">Belum Lulus</option>
-                                </select>
+                                <label class="form-label fw-semibold d-block">Perkembangan Peserta Didik</label>
+                                <div class="mkdk-options">
+                                    <?php foreach ($mkdkStatuses as $status): ?>
+                                        <?php $id = 'mkdk-perkembangan-' . strtolower(str_replace(' ', '-', $status)); ?>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="mkdk[perkembangan_peserta_didik]" id="<?= $id ?>" value="<?= $status ?>" required>
+                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label fw-semibold d-block">Psikologi Pendidikan</label>
+                                <div class="mkdk-options">
+                                    <?php foreach ($mkdkStatuses as $status): ?>
+                                        <?php $id = 'mkdk-psikologi-' . strtolower(str_replace(' ', '-', $status)); ?>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="mkdk[psikologi_pendidikan]" id="<?= $id ?>" value="<?= $status ?>" required>
+                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
@@ -348,12 +404,12 @@
                                 Akan melaporkan kendala yang berpotensi menghambat keikutsertaan PLP kepada Divisi PLP sesuai prosedur yang berlaku.
                             </label>
                         </div>
-                        <p class="rounded p-2 " style="background-color:#F9FAFB;">
+                        <p class="rounded p-2 no-select" style="background-color:#F9FAFB;">
                             Demikian pernyataan ini saya buat dengan sebenar-benarnya tanpa ada paksaan dari pihak manapun.
                         </p>
                         <div class="mb-3">
                             <label for="statementRewrite" class="form-label fw-semibold">Penegasan Pernyataan</label>
-                            <textarea id="statementRewrite" name="statement_rewrite" class="form-control" placeholder="Ketik ulang pernyataan komitmen sebagai tanda persetujuan..."
+                            <textarea id="statementRewrite" name="statement_rewrite" class="form-control" placeholder="Ketik saya bersedia"
                                 rows="4" required></textarea>
                         </div>
                         <div class="d-flex justify-content-between">

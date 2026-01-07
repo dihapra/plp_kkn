@@ -39,9 +39,9 @@ class Dashboard
 
     public function get_groups_by_program(): array
     {
-        $this->db->select('program.nama AS program, COUNT(kelompok.id) AS total_groups');
+        $this->db->select('program.nama AS program, COUNT(program_kelompok.id) AS total_groups');
         $this->db->from('program');
-        $this->db->join('kelompok', 'kelompok.id_program = program.id', 'left');
+        $this->db->join('program_kelompok', 'program_kelompok.id_program = program.id', 'left');
         $this->db->group_by('program.id');
         return $this->db->get()->result_array();
     }

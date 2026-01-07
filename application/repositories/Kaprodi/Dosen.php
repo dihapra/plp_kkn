@@ -96,14 +96,14 @@ class Dosen
             dosen.id_prodi,
             dosen.fakultas,
             prodi.nama AS nama_prodi,
-            COUNT(mhs.id) AS total_mahasiswa,
-            COALESCE(SUM(CASE WHEN mhs.id_sekolah IS NOT NULL THEN 1 ELSE 0 END), 0) AS mahasiswa_aktif,
+            COUNT(pm.id) AS total_mahasiswa,
+            COALESCE(SUM(CASE WHEN pm.id_sekolah IS NOT NULL THEN 1 ELSE 0 END), 0) AS mahasiswa_aktif,
             GROUP_CONCAT(DISTINCT sekolah.nama ORDER BY sekolah.nama SEPARATOR ", ") AS sekolah_binaan
         ');
         $this->db->from('dosen');
         $this->db->join('prodi', 'prodi.id = dosen.id_prodi', 'left');
-        $this->db->join('mahasiswa mhs', 'mhs.id_dosen = dosen.id', 'left');
-        $this->db->join('sekolah', 'sekolah.id = mhs.id_sekolah', 'left');
+        $this->db->join('program_mahasiswa pm', 'pm.id_dosen = dosen.id', 'left');
+        $this->db->join('sekolah', 'sekolah.id = pm.id_sekolah', 'left');
 
         if (!empty($filters['id_prodi'])) {
             $this->db->where('dosen.id_prodi', (int) $filters['id_prodi']);

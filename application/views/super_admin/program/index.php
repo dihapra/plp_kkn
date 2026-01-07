@@ -19,9 +19,10 @@
                 <table id="dataTable" class="table table-sm mb-0 align-middle w-100">
                     <thead>
                         <tr>
-                            <th style="width: 40%;">Nama Program</th>
-                            <th style="width: 25%;">Tahun Ajaran</th>
-                            <th style="width: 20%;">Status</th>
+                            <th style="width: 20%;">Kode</th>
+                            <th style="width: 30%;">Nama Program</th>
+                            <th style="width: 20%;">Tahun Ajaran</th>
+                            <th style="width: 15%;">Status</th>
                             <th class="text-end" style="width: 15%;">Aksi</th>
                         </tr>
                     </thead>
@@ -59,6 +60,13 @@
                 }
             },
             columns: [
+                {
+                    data: null,
+                    orderable: true,
+                    render: function (data, type, row) {
+                        return row?.kode || '-';
+                    }
+                },
                 { data: 'nama', orderable: true },
                 { data: 'tahun_ajaran', orderable: true },
                 { data: 'status', orderable: true },
@@ -95,6 +103,7 @@
 
         function openCreateModal() {
             $('#program_id').val('');
+            $('#program_kode').val('');
             $('#program_nama').val('');
             $('#program_tahun').val('');
             $('#program_status').val('0');
@@ -105,6 +114,7 @@
 
         function openEditModal(rowData) {
             $('#program_id').val(rowData.id);
+            $('#program_kode').val(rowData.kode || '');
             $('#program_nama').val(rowData.nama);
             $('#program_tahun').val(rowData.tahun_ajaran);
             $('#program_status').val(rowData.status === 'Aktif' ? '1' : '0');
@@ -256,6 +266,15 @@
             <form id="programForm">
                 <div class="modal-body">
                     <input type="hidden" id="program_id" name="id">
+                    <div class="mb-3">
+                        <label for="program_kode" class="form-label">Kode</label>
+                        <select class="form-select" id="program_kode" name="kode" required>
+                            <option value="" selected>Pilih Kode</option>
+                            <option value="plp1">plp1</option>
+                            <option value="kkn">kkn</option>
+                            <option value="plp2">plp2</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label for="program_nama" class="form-label">Nama Program</label>
                         <input type="text" class="form-control" id="program_nama" name="nama" required>

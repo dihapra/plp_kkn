@@ -27,6 +27,7 @@ class Auth extends MY_Controller
         'register_mahasiswa',
         'get_faculties_for_registration',
         'get_study_programs_for_registration',
+        // 'seed'
     ];
     public function __construct()
     {
@@ -98,47 +99,54 @@ class Auth extends MY_Controller
     // Page for teacher registration
     public function register_guru_page()
     {
-        $this->load->view("auth/register/guru");
+        // $this->load->view("auth/register/guru");
+        show_404();
     }
 
     // Process teacher registration
     public function register_guru()
     {
-        try {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $useCase = new RegisterTeacherCase();
-                $useCase->execute();
-                response_json('Pendaftaran berhasil, silakan tunggu verifikasi dari admin.');
-            }
-        } catch (Exception $e) {
-            response_error($e->getMessage(), $e, 422);
-        }
+        // try {
+        //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        //         $useCase = new RegisterTeacherCase();
+        //         $useCase->execute();
+        //         response_json('Pendaftaran berhasil, silakan tunggu verifikasi dari admin.');
+        //     }
+        // } catch (Exception $e) {
+        //     response_error($e->getMessage(), $e, 422);
+        // }
+        $this->denyRegistrationFeature('guru pamong');
     }
 
     // Page for principal registration
     public function register_kepala_sekolah_page()
     {
-        $this->load->view("auth/register/kepala_sekolah");
+        // $this->load->view("auth/register/kepala_sekolah");
+        show_404();
     }
 
     // Process principal registration
     public function register_kepala_sekolah()
     {
-        try {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $useCase = new RegisterPrincipalCase();
-                $useCase->execute();
-                response_json('Pendaftaran berhasil, silakan tunggu verifikasi dari admin.');
-            }
-        } catch (Exception $e) {
-            response_error($e->getMessage(), $e, 422);
-        }
+        // try {
+        //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        //         $useCase = new RegisterPrincipalCase();
+        //         $useCase->execute();
+        //         response_json('Pendaftaran berhasil, silakan tunggu verifikasi dari admin.');
+        //     }
+        // } catch (Exception $e) {
+        //     response_error($e->getMessage(), $e, 422);
+        // }
+        $this->denyRegistrationFeature('kepala sekolah');
     }
 
     // Page for student registration
     public function register_mahasiswa_page()
     {
-        $this->load->view("auth/register/mahasiswa");
+        $data = [
+            'activeProgram' => $this->findActiveProgramRow(),
+        ];
+        $this->load->view("auth/register/mahasiswa", $data);
     }
 
     // Process student registration
@@ -155,8 +163,10 @@ class Auth extends MY_Controller
             ['field' => 'email', 'label' => 'Email', 'rules' => 'required|valid_email|trim'],
             ['field' => 'nim', 'label' => 'NIM', 'rules' => 'required|exact_length[10]|numeric'],
             ['field' => 'phone', 'label' => 'Nomor WhatsApp', 'rules' => 'required|trim'],
+            ['field' => 'religion', 'label' => 'Agama', 'rules' => 'required|in_list[Islam,Kristen Protestan,Katolik,Hindu,Buddha,Konghucu]'],
             ['field' => 'faculty', 'label' => 'Fakultas', 'rules' => 'required|trim'],
             ['field' => 'program_studi', 'label' => 'Program Studi', 'rules' => 'required|trim'],
+            ['field' => 'total_sks', 'label' => 'Total SKS', 'rules' => 'required|integer|greater_than[0]'],
             ['field' => 'mkdk[filsafat_pendidikan]', 'label' => 'Filsafat Pendidikan', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
             ['field' => 'mkdk[profesi_kependidikan]', 'label' => 'Profesi Kependidikan', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
             ['field' => 'mkdk[perkembangan_peserta_didik]', 'label' => 'Perkembangan Peserta Didik', 'rules' => 'required|in_list[Lulus,Proses,Belum Lulus]'],
@@ -181,8 +191,10 @@ class Auth extends MY_Controller
             $email = trim($this->input->post('email', true));
             $nim = trim($this->input->post('nim', true));
             $phone = trim($this->input->post('phone', true));
+            $religion = trim($this->input->post('religion', true));
             $faculty = trim($this->input->post('faculty', true));
             $programStudi = trim($this->input->post('program_studi', true));
+            $totalSks = (int) $this->input->post('total_sks', true);
             $mkdkInput = (array) $this->input->post('mkdk');
             $mkdk = $this->normalizeMkdkStatuses($mkdkInput);
 
@@ -216,8 +228,8 @@ class Auth extends MY_Controller
                 'nim'        => $nim,
                 'email'      => $email,
                 'no_hp'      => $phone,
+                'agama'      => $religion,
                 'id_prodi'   => $prodiId,
-                'status'     => 'unverified',
                 'created_at' => date('Y-m-d H:i:s'),
             ];
 
@@ -228,21 +240,35 @@ class Auth extends MY_Controller
                 throw new Exception('Gagal menyimpan data mahasiswa.');
             }
 
+            $programMahasiswaData = [
+                'id_program' => $activeProgramId,
+                'id_mahasiswa' => $mahasiswaId,
+                'status' => 'unverified',
+                'valid_from' => date('Y-m-d H:i:s'),
+                'created_at' => date('Y-m-d H:i:s'),
+            ];
+            $this->db->insert('program_mahasiswa', $programMahasiswaData);
+            $programMahasiswaId = (int) $this->db->insert_id();
+
+            if ($programMahasiswaId <= 0) {
+                throw new Exception('Gagal menyimpan data program mahasiswa.');
+            }
+
             $syaratData = [
-                'id_program'                 => $activeProgramId,
-                'id_mahasiswa'               => $mahasiswaId,
+                'id_program_mahasiswa'       => $programMahasiswaId,
                 'filsafat_pendidikan'        => $mkdk['filsafat_pendidikan'],
                 'profesi_kependidikan'       => $mkdk['profesi_kependidikan'],
                 'perkembangan_peserta_didik' => $mkdk['perkembangan_peserta_didik'],
                 'psikologi_pendidikan'       => $mkdk['psikologi_pendidikan'],
+                'total_sks'                  => $totalSks,
             ];
             $this->db->insert('syarat_mapel', $syaratData);
 
             $this->db->trans_commit();
 
-            response_json([
-                'message' => 'Pendaftaran mahasiswa berhasil dikirim. Silakan cek email secara berkala untuk informasi selanjutnya.'
-            ]);
+            response_json(
+                 'Pendaftaran mahasiswa berhasil dikirim, data anda akan diverifikasi. Silakan cek email secara berkala untuk informasi selanjutnya.'
+            );
         } catch (Throwable $e) {
             $this->db->trans_rollback();
             response_error($e->getMessage(), $e, 422);
@@ -298,20 +324,26 @@ class Auth extends MY_Controller
 
     private function getActiveProgramId(): int
     {
-        $program = $this->db->select('id')
+        $program = $this->findActiveProgramRow();
+        if (!$program) {
+            throw new Exception('Belum ada program aktif yang tersedia.');
+        }
+
+        return (int) $program['id'];
+    }
+
+    private function findActiveProgramRow(): ?array
+    {
+        $program = $this->db->select('id, nama, tahun_ajaran')
             ->from('program')
             ->where('active', 1)
             ->order_by('updated_at', 'DESC')
             ->order_by('id', 'DESC')
             ->limit(1)
             ->get()
-            ->row();
+            ->row_array();
 
-        if (!$program) {
-            throw new Exception('Belum ada program aktif yang tersedia.');
-        }
-
-        return (int) $program->id;
+        return $program ?: null;
     }
 
     private function resolveProdiId(string $prodiName, string $fakultas): int
@@ -344,6 +376,11 @@ class Auth extends MY_Controller
         }
 
         return $result;
+    }
+
+    private function denyRegistrationFeature(string $label): void
+    {
+        response_error(sprintf('Fitur pendaftaran %s belum tersedia.', $label), null, 403);
     }
 
     public function update_password()

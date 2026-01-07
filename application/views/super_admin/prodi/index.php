@@ -4,6 +4,9 @@
             <h3 class="mb-1">Daftar Prodi</h3>
             <p class="mb-0 text-muted">Kelola program studi beserta fakultasnya.</p>
         </div>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
         <button type="button" class="btn btn-primary" id="btnAddProdi">
             <i class="bi bi-plus-lg me-1"></i>
             Tambah Prodi
@@ -87,13 +90,24 @@
 
         const modalEl = document.getElementById('prodiModal');
         const prodiModal = new bootstrap.Modal(modalEl);
+        const insertTabEl = document.getElementById('prodiTabInsert');
+
+        function showInsertTab() {
+            if (!insertTabEl) {
+                return;
+            }
+            const tab = new bootstrap.Tab(insertTabEl);
+            tab.show();
+        }
 
         function openCreateModal() {
             $('#prodi_id').val('');
             $('#prodi_nama').val('');
             $('#prodi_fakultas').val('');
+            $('#prodiImportForm')[0]?.reset();
             $('#prodiModalTitle').text('Tambah Prodi');
             $('#prodiSubmitBtn').text('Simpan');
+            showInsertTab();
             prodiModal.show();
         }
 
@@ -101,8 +115,10 @@
             $('#prodi_id').val(rowData.id);
             $('#prodi_nama').val(rowData.nama);
             $('#prodi_fakultas').val(rowData.fakultas);
+            $('#prodiImportForm')[0]?.reset();
             $('#prodiModalTitle').text('Edit Prodi');
             $('#prodiSubmitBtn').text('Simpan Perubahan');
+            showInsertTab();
             prodiModal.show();
         }
 
@@ -163,6 +179,41 @@
             }
         });
 
+        $('#prodiImportForm').on('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(`${baseUrl}super-admin/prodi/import`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    const message = result?.message || 'Gagal mengimpor prodi';
+                    throw new Error(message);
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: result?.message || 'Data prodi berhasil diimpor.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    prodiModal.hide();
+                    table.ajax.reload(null, false);
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: error.message || 'Terjadi kesalahan.'
+                });
+            }
+        });
+
         // Delete (belum terhubung ke endpoint, hanya konfirmasi UI)
         $('#dataTable').on('click', '.action-delete', function (e) {
             e.preventDefault();
@@ -201,24 +252,55 @@
                 <h5 class="modal-title" id="prodiModalTitle">Tambah Prodi</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="prodiForm">
-                <div class="modal-body">
-                    <input type="hidden" id="prodi_id" name="id">
-                    <div class="mb-3">
-                        <label for="prodi_nama" class="form-label">Nama Prodi</label>
-                        <input type="text" class="form-control" id="prodi_nama" name="nama" required>
+            <div class="modal-body pt-0">
+                <ul class="nav nav-tabs" id="prodiModalTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="prodiTabInsert" data-bs-toggle="tab" data-bs-target="#prodiTabPaneInsert" type="button" role="tab" aria-controls="prodiTabPaneInsert" aria-selected="true">Insert</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="prodiTabImport" data-bs-toggle="tab" data-bs-target="#prodiTabPaneImport" type="button" role="tab" aria-controls="prodiTabPaneImport" aria-selected="false">Import</button>
+                    </li>
+                </ul>
+                <div class="tab-content pt-3">
+                    <div class="tab-pane fade show active" id="prodiTabPaneInsert" role="tabpanel" aria-labelledby="prodiTabInsert">
+                        <form id="prodiForm">
+                            <input type="hidden" id="prodi_id" name="id">
+                            <div class="mb-3">
+                                <label for="prodi_nama" class="form-label">Nama Prodi</label>
+                                <input type="text" class="form-control" id="prodi_nama" name="nama" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="prodi_fakultas" class="form-label">Fakultas</label>
+                                <input type="text" class="form-control" id="prodi_fakultas" name="fakultas" required>
+                            </div>
+                            <div class="modal-footer border-0 px-0 pb-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary" id="prodiSubmitBtn">Simpan</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="mb-3">
-                        <label for="prodi_fakultas" class="form-label">Fakultas</label>
-                        <input type="text" class="form-control" id="prodi_fakultas" name="fakultas" required>
+                    <div class="tab-pane fade" id="prodiTabPaneImport" role="tabpanel" aria-labelledby="prodiTabImport">
+                        <form id="prodiImportForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="prodi_import_file" class="form-label">File XLSX</label>
+                                <input type="file" class="form-control" id="prodi_import_file" name="importFile" accept=".xlsx" required>
+                                <small class="text-muted d-block mt-2">Format: kolom A = nama, kolom B = fakultas.</small>
+                            </div>
+                            <div class="mb-3">
+                                <a class="btn btn-outline-light btn-sm" href="<?= base_url('storage/templates/import_prodi_template.xlsx') ?>" download>
+                                    <i class="bi bi-download me-1"></i> Contoh template prodi
+                                </a>
+                            </div>
+                            <div class="modal-footer border-0 px-0 pb-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-upload me-1"></i> Import
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" id="prodiSubmitBtn">Simpan</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
-

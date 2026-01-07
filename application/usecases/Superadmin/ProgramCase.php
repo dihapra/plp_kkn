@@ -78,4 +78,9 @@ class ProgramCase extends BaseCase
         return $this->ProgramRepository->list_simple();
     }
 
+    public function listActive(): array
+    {
+        return $this->ProgramRepository->list_active();
+    }
+
 }

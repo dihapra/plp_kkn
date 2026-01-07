@@ -8,12 +8,16 @@ use UseCases\Superadmin\GuruCase;
 use UseCases\Superadmin\DosenCase;
 use UseCases\Superadmin\KaprodiCase;
 use UseCases\Superadmin\MahasiswaCase;
+use UseCases\Superadmin\MahasiswaTrueCase;
+use UseCases\Superadmin\AdminPicCase;
 use UseCases\Superadmin\UtilCase;
+use Imports\ImportProdi;
+use Imports\ImportMahasiswaTrue;
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
 
-class SuperAdmin extends MY_Controller
+class Superadmin extends MY_Controller
 {
     protected $AuthService;
     protected $SuperAdminRepo;
@@ -25,6 +29,7 @@ class SuperAdmin extends MY_Controller
         'filter_prodi',
         'filter_fakultas',
         'filter_program',
+        'test'
     ];
 
     public function __construct()
@@ -34,6 +39,10 @@ class SuperAdmin extends MY_Controller
         $this->load->helper('form');
         $this->check_role(['super_admin']);
         $this->AuthService = new AuthService();
+    }
+    public function test()
+    {
+        dd(true);
     }
 
     public function login()
@@ -181,6 +190,22 @@ class SuperAdmin extends MY_Controller
         }
     }
 
+    public function prodi_import()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $importer = new ImportProdi();
+            $importer->import_prodi();
+            response_json('Import prodi berhasil.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
     public function dosen()
     {
         view_with_layout("super_admin/dosen/index", "Super Admin - Dosen","super_admin",[],null,"script/datatable");
@@ -305,6 +330,103 @@ class SuperAdmin extends MY_Controller
         }
     }
 
+    public function mahasiswa_true()
+    {
+        $programCase = new ProgramCase();
+        $programOptions = $programCase->listActive();
+        $viewData = [
+            'programOptions'   => $programOptions,
+            'defaultProgramId' => $programOptions[0]['id'] ?? null,
+        ];
+        view_with_layout(
+            "super_admin/mahasiswa_true/index",
+            "Super Admin - Data Mahasiswa Admin",
+            "super_admin",
+            $viewData,
+            null,
+            "script/datatable"
+        );
+    }
+
+    public function mahasiswa_true_datatable()
+    {
+        $req = get_param_datatable();
+        $uc  = new MahasiswaTrueCase();
+        $req['filter_program'] = (int) ($this->input->post('program_id') ?? 0);
+        $data = $uc->datatable($req);
+        datatable_response_array($req['draw'], $data['count_total'], $data['count_filtered'], $data['formatted']);
+    }
+
+    public function mahasiswa_true_store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaTrueCase();
+            $payload = $this->input->post(null, true) ?? [];
+            $uc->create($payload);
+            response_json('Data mahasiswa acuan berhasil disimpan.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function mahasiswa_true_update($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaTrueCase();
+            $payload = $this->input->post(null, true) ?? [];
+            $uc->update((int) $id, $payload);
+            response_json('Data mahasiswa acuan berhasil diperbarui.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function mahasiswa_true_delete($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaTrueCase();
+            $uc->delete((int) $id);
+            response_json('Data mahasiswa acuan berhasil dihapus.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function mahasiswa_true_import()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $importer = new ImportMahasiswaTrue();
+            $programCode = $this->input->post('program_code', true);
+            if ($programCode === null || trim((string) $programCode) === '') {
+                $programCode = $this->input->post('program_kode', true);
+            }
+            $importer->import_mahasiswa_true((string) $programCode);
+            response_json('Import mahasiswa berhasil.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
     public function mahasiswa_update($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -421,6 +543,79 @@ class SuperAdmin extends MY_Controller
         }
     }
 
+    public function admin_pic()
+    {
+        view_with_layout("super_admin/admin_pic/index", "Super Admin - Admin PIC", "super_admin", [], null, "script/datatable");
+    }
+
+    public function admin_pic_datatable()
+    {
+        $req = get_param_datatable();
+        $uc = new AdminPicCase();
+        $data = $uc->datatable($req);
+        datatable_response_array($req['draw'], $data['count_total'], $data['count_filtered'], $data['formatted']);
+    }
+
+    public function admin_pic_store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $payload = [
+                'nama' => $this->input->post('nama', true),
+                'email' => $this->input->post('email', true),
+                'password' => $this->input->post('password', true),
+                'fakultas' => $this->input->post('fakultas', true),
+            ];
+            $uc = new AdminPicCase();
+            $uc->create($payload);
+            response_json('Admin PIC berhasil dibuat.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function admin_pic_update($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $payload = [
+                'nama' => $this->input->post('nama', true),
+                'email' => $this->input->post('email', true),
+                'password' => $this->input->post('password', true),
+                'fakultas' => $this->input->post('fakultas', true),
+            ];
+            $uc = new AdminPicCase();
+            $uc->update((int) $id, $payload);
+            response_json('Admin PIC berhasil diperbarui.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function admin_pic_delete($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new AdminPicCase();
+            $uc->delete((int) $id);
+            response_json('Admin PIC berhasil dihapus.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
     public function filter_sekolah()
     {
         try {
@@ -480,6 +675,22 @@ class SuperAdmin extends MY_Controller
             ];
             $uc->update((int) $id, $payload);
             response_json('Sekolah berhasil diperbarui');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function sekolah_delete($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new SekolahCase();
+            $uc->delete((int) $id);
+            response_json('Sekolah berhasil dihapus');
         } catch (\Throwable $th) {
             response_error($th->getMessage(), $th, 422);
         }

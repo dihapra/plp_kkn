@@ -269,6 +269,10 @@
                         <div class="sb-nav-link-icon"><i class="bi bi-clipboard-data"></i></div>
                         Laporan
                     </a>
+                    <a class="nav-link" href="<?= base_url('kaprodi/plotting') ?>">
+                        <div class="sb-nav-link-icon"><i class="bi bi-shuffle"></i></div>
+                        Plotting Mahasiswa
+                    </a>
 
                 <?php elseif (in_array($role, ['student', 'mahasiswa'], true)): ?>
                     <div class="sb-sidenav-menu-heading">Mahasiswa</div>

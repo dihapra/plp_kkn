@@ -11,6 +11,7 @@ use Repositories\Superadmin\Guru;
 use Repositories\Superadmin\Dosen;
 use Repositories\Superadmin\Kaprodi;
 use Repositories\Superadmin\Mahasiswa;
+use Repositories\Superadmin\MahasiswaTrue;
 
 defined('BASEPATH') or exit('No direct script access allowed');
 class BaseCase
@@ -25,6 +26,7 @@ class BaseCase
     public $DosenRepository;
     public $KaprodiRepository;
     public $MahasiswaRepository;
+    public $MahasiswaTrueRepository;
     public function __construct()
     {
         $this->CI = &get_instance();
@@ -37,6 +39,7 @@ class BaseCase
         $this->DosenRepository = new Dosen();
         $this->KaprodiRepository = new Kaprodi();
         $this->MahasiswaRepository = new Mahasiswa();
+        $this->MahasiswaTrueRepository = new MahasiswaTrue();
     }
 
     

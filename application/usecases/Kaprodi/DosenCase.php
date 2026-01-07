@@ -26,6 +26,7 @@ class DosenCase extends BaseCase
             $db->trans_begin();
 
             $data = $this->normalizeAndValidate($payload);
+            $activeProgramId = $this->getActiveProgramId();
 
             $userData = [
                 'email'      => $data['email'],
@@ -48,7 +49,8 @@ class DosenCase extends BaseCase
             $data['id_user']    = $userId;
             $data['created_at'] = date('Y-m-d H:i:s');
 
-            $this->DosenRepository->create($data);
+            $dosenId = $this->DosenRepository->create($data);
+            $this->ensureProgramRelation($activeProgramId, $dosenId);
 
             $db->trans_commit();
         } catch (\Throwable $e) {
@@ -76,6 +78,7 @@ class DosenCase extends BaseCase
             $db->trans_begin();
 
             $data = $this->normalizeAndValidate($payload, (int) $row->id_prodi, (int) $row->id);
+            $activeProgramId = $this->getActiveProgramId();
 
             if (!empty($row->id_user)) {
                 $userUpdate = [
@@ -92,6 +95,7 @@ class DosenCase extends BaseCase
             }
 
             $this->DosenRepository->update($id, $data);
+            $this->ensureProgramRelation($activeProgramId, (int) $id);
 
             $db->trans_commit();
         } catch (\Throwable $e) {
@@ -118,6 +122,7 @@ class DosenCase extends BaseCase
         try {
             $db->trans_begin();
 
+            $db->where('id_dosen', $id)->delete('program_dosen');
             $this->DosenRepository->delete($id);
 
             if (!empty($row->id_user)) {
@@ -236,5 +241,52 @@ class DosenCase extends BaseCase
             'fakultas'   => $prodi->fakultas ?? null,
             'updated_at' => date('Y-m-d H:i:s'),
         ];
+    }
+
+    private function getActiveProgramId(): int
+    {
+        $row = $this->CI->db
+            ->select('id')
+            ->from('program')
+            ->where('active', 1)
+            ->order_by('updated_at', 'DESC')
+            ->order_by('id', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$row) {
+            throw new \RuntimeException('Belum ada program aktif.');
+        }
+
+        return (int) $row->id;
+    }
+
+    private function ensureProgramRelation(int $programId, int $dosenId): void
+    {
+        if ($programId <= 0 || $dosenId <= 0) {
+            return;
+        }
+
+        $exists = $this->CI->db
+            ->select('id')
+            ->from('program_dosen')
+            ->where('id_program', $programId)
+            ->where('id_dosen', $dosenId)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if ($exists) {
+            return;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $this->CI->db->insert('program_dosen', [
+            'id_program' => $programId,
+            'id_dosen' => $dosenId,
+            'valid_from' => $now,
+            'created_at' => $now,
+        ]);
     }
 }

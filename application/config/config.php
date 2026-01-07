@@ -23,7 +23,8 @@ defined('BASEPATH') or exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = getenv('BASE_URL') ?? 'http://plp_kkn.test/';
+$prod = false;
+$config['base_url'] = $prod ? "https://e-plp.unimed.ac.id/":'http://plp_kkn.test/';
 
 /*
 |--------------------------------------------------------------------------

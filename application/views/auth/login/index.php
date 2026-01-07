@@ -38,7 +38,7 @@
             opacity: 0.15;
         }
 
-        .promo-panel > * {
+        .promo-panel>* {
             position: relative;
             z-index: 2;
         }
@@ -100,6 +100,14 @@
             height: 1px;
             background: #e2e8f0;
         }
+
+        .btn-disabled {
+            color: #94a3b8 !important;
+            border-color: #cbd5f5 !important;
+            background: #fff !important;
+            pointer-events: none;
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -115,7 +123,8 @@
                     </div>
                 </div>
                 <h1 class="display-5 fw-bold mb-3">Selamat datang kembali.</h1>
-                <p class="lead mb-4">Versi baru PLP-KKN menghadirkan antarmuka yang seragam lintas peran, lengkap dengan dashboard, logbook, dan penempatan yang lebih cerdas.</p>
+                <p class="lead mb-4">Versi baru PLP-KKN menghadirkan antarmuka yang seragam lintas peran, lengkap dengan
+                    dashboard, logbook, dan penempatan yang lebih cerdas.</p>
                 <div class="floating-card">
                     <p class="text-uppercase small text-white-50 mb-2">Mengapa versi baru?</p>
                     <ul class="mb-0 ps-3">
@@ -147,11 +156,8 @@
                         <label for="identifier" class="form-label">Alamat Email</label>
                         <input type="email"
                             class="form-control <?php echo (form_error('identifier')) ? 'is-invalid' : ''; ?>"
-                            id="identifier"
-                            name="identifier"
-                            placeholder="nama@email.com"
-                            value="<?php echo set_value('identifier'); ?>"
-                            required>
+                            id="identifier" name="identifier" placeholder="nama@email.com"
+                            value="<?php echo set_value('identifier'); ?>" required>
                         <div class="invalid-feedback">
                             <?php echo form_error('identifier'); ?>
                         </div>
@@ -161,10 +167,7 @@
                         <div class="input-group">
                             <input type="password"
                                 class="form-control <?php echo (form_error('password')) ? 'is-invalid' : ''; ?>"
-                                id="password"
-                                name="password"
-                                placeholder="Masukkan kata sandi"
-                                required>
+                                id="password" name="password" placeholder="Masukkan kata sandi" required>
                             <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -177,15 +180,28 @@
                         <button type="submit" class="btn btn-primary btn-lg">Masuk</button>
                     </div>
                 </form>
+                <div class="divider my-4">Sudah punya akun di PLP 2?</div>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-disabled disabled" disabled
+                        aria-disabled="true">
+                        Daftar Ulang Guru Pamong (Segera)
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-disabled disabled" disabled
+                        aria-disabled="true">
+                        Daftar Ulang Kepala Sekolah (Segera)
+                    </button>
+                </div>
                 <div class="divider my-4">Belum punya akun?</div>
                 <div class="d-grid gap-2">
-                    <a href="<?= base_url('register/guru'); ?>" class="btn btn-outline-primary">
-                        Daftar sebagai Guru Pamong
-                    </a>
-                    <a href="<?= base_url('register/kepala_sekolah'); ?>" class="btn btn-outline-success">
-                        Daftar sebagai Kepala Sekolah
-                    </a>
-                    <a href="<?= base_url('register/mahasiswa'); ?>" class="btn btn-outline-info">
+                    <button type="button" class="btn btn-outline-primary btn-disabled disabled" disabled
+                        aria-disabled="true">
+                        Daftar sebagai Guru Pamong (Segera)
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-disabled disabled" disabled
+                        aria-disabled="true">
+                        Daftar sebagai Kepala Sekolah (Segera)
+                    </button>
+                    <a href="<?= base_url('register/mahasiswa'); ?>" class="btn btn-success text-white">
                         Daftar sebagai Mahasiswa PLP
                     </a>
                 </div>
@@ -195,7 +211,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
+        document.getElementById('togglePassword').addEventListener('click', function () {
             const passwordInput = document.getElementById('password');
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);

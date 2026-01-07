@@ -40,35 +40,4 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-bar-chart me-2"></i>Ringkasan Prodi</span>
-        <button class="btn btn-sm btn-outline-light" disabled>Data belum tersedia</button>
-    </div>
-    <div class="card-body">
-        <p class="text-muted mb-0">Gunakan area ini untuk menampilkan grafik distribusi mahasiswa per angkatan, capaian nilai, atau data penting lainnya.</p>
-    </div>
-</div>
-
-<div class="row g-3">
-    <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header">
-                <i class="bi bi-mortarboard me-2"></i>Mahasiswa Terbaru
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-0">Belum ada data mahasiswa yang ditampilkan. Integrasikan dengan modul mahasiswa untuk menampilkan daftar terbaru.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header">
-                <i class="bi bi-people me-2"></i>Dosen Aktif
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-0">Belum ada data dosen yang ditampilkan. Integrasikan dengan modul dosen untuk menampilkan aktivitas terbaru.</p>
-            </div>
-        </div>
-    </div>
-</div>
+<?php /* sementara disembunyikan - Ringkasan Prodi, Mahasiswa Terbaru, Dosen Aktif */ ?>
