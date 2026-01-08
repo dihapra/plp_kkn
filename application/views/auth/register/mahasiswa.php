@@ -169,14 +169,19 @@
             }
         }
 
-        .mkdk-options {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
+        .mkdk-table {
+            margin: 0;
         }
 
-        .mkdk-options .form-check {
-            margin-bottom: 0;
+        .mkdk-table td {
+            padding: 0.45rem 0;
+            vertical-align: middle;
+        }
+
+        .mkdk-label-cell {
+            width: 240px;
+            font-weight: 600;
+            color: var(--ink);
         }
     </style>
 </head>
@@ -288,57 +293,67 @@
 
                     <div class="step" id="step-2">
                         <div class="row g-3">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 mb-2">
                                 <label class="form-label fw-semibold" for="totalSks">Total SKS</label>
                                 <input type="number" class="form-control" id="totalSks" name="total_sks" min="0" placeholder="Contoh: 90" required>
                                 <div class="form-text">Masukkan total SKS yang sudah ditempuh.</div>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold d-block">Filsafat Pendidikan</label>
-                                <div class="mkdk-options">
-                                    <?php foreach ($mkdkStatuses as $status): ?>
-                                        <?php $id = 'mkdk-filsafat-' . strtolower(str_replace(' ', '-', $status)); ?>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="mkdk[filsafat_pendidikan]" id="<?= $id ?>" value="<?= $status ?>" required>
-                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold d-block">Profesi Kependidikan</label>
-                                <div class="mkdk-options">
-                                    <?php foreach ($mkdkStatuses as $status): ?>
-                                        <?php $id = 'mkdk-profesi-' . strtolower(str_replace(' ', '-', $status)); ?>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="mkdk[profesi_kependidikan]" id="<?= $id ?>" value="<?= $status ?>" required>
-                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold d-block">Perkembangan Peserta Didik</label>
-                                <div class="mkdk-options">
-                                    <?php foreach ($mkdkStatuses as $status): ?>
-                                        <?php $id = 'mkdk-perkembangan-' . strtolower(str_replace(' ', '-', $status)); ?>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="mkdk[perkembangan_peserta_didik]" id="<?= $id ?>" value="<?= $status ?>" required>
-                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold d-block">Psikologi Pendidikan</label>
-                                <div class="mkdk-options">
-                                    <?php foreach ($mkdkStatuses as $status): ?>
-                                        <?php $id = 'mkdk-psikologi-' . strtolower(str_replace(' ', '-', $status)); ?>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="mkdk[psikologi_pendidikan]" id="<?= $id ?>" value="<?= $status ?>" required>
-                                            <label class="form-check-label" for="<?= $id ?>"><?= $status ?></label>
-                                        </div>
-                                    <?php endforeach; ?>
+                            <div class="col-12">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless mkdk-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" class="mkdk-label-cell">Mata Kuliah</th>
+                                                <th scope="col">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="mkdk-label-cell">Filsafat Pendidikan</td>
+                                                <td>
+                                                    <select class="form-select" name="mkdk[filsafat_pendidikan]" id="mkdk-filsafat-pendidikan" required>
+                                                        <option value="">-- Pilih Status --</option>
+                                                        <?php foreach ($mkdkStatuses as $status): ?>
+                                                            <option value="<?= $status ?>"><?= $status ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="mkdk-label-cell">Profesi Kependidikan</td>
+                                                <td>
+                                                    <select class="form-select" name="mkdk[profesi_kependidikan]" id="mkdk-profesi-kependidikan" required>
+                                                        <option value="">-- Pilih Status --</option>
+                                                        <?php foreach ($mkdkStatuses as $status): ?>
+                                                            <option value="<?= $status ?>"><?= $status ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="mkdk-label-cell">Perkembangan Peserta Didik</td>
+                                                <td>
+                                                    <select class="form-select" name="mkdk[perkembangan_peserta_didik]" id="mkdk-perkembangan-peserta-didik" required>
+                                                        <option value="">-- Pilih Status --</option>
+                                                        <?php foreach ($mkdkStatuses as $status): ?>
+                                                            <option value="<?= $status ?>"><?= $status ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="mkdk-label-cell">Psikologi Pendidikan</td>
+                                                <td>
+                                                    <select class="form-select" name="mkdk[psikologi_pendidikan]" id="mkdk-psikologi-pendidikan" required>
+                                                        <option value="">-- Pilih Status --</option>
+                                                        <?php foreach ($mkdkStatuses as $status): ?>
+                                                            <option value="<?= $status ?>"><?= $status ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -368,7 +383,8 @@
                                 <span id="summaryFaculty">-</span>
                             </div>
                         </div>
-                        <p class="mb-3">Dengan ini saya menyatakan:</p>
+                        <p class="mb-0">Dengan ini saya menyatakan:</p>
+                        <p class="mb-3 text-muted">(silahkan klik centang)</p>
                         <div class="form-check statement-check">
                             <input class="form-check-input" type="checkbox" value="setuju_plp" id="statementOne" name="agreement_plp"
                                 required>
@@ -411,6 +427,7 @@
                             <label for="statementRewrite" class="form-label fw-semibold">Penegasan Pernyataan</label>
                             <textarea id="statementRewrite" name="statement_rewrite" class="form-control" placeholder="Ketik saya bersedia"
                                 rows="4" required></textarea>
+                            <div class="form-text">Ketik persis: saya bersedia</div>
                         </div>
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-secondary prev-step">Kembali</button>
@@ -435,6 +452,8 @@
         const prodiSelect = document.getElementById('prodiSelect');
         const nameField = document.getElementById('studentName');
         const nimField = document.getElementById('studentNim');
+        const statementField = document.getElementById('statementRewrite');
+        const requiredStatement = 'saya bersedia';
 
         const summaryElements = {
             name: document.getElementById('summaryName'),
@@ -475,6 +494,7 @@
             nameField.addEventListener('input', handleNameChange);
             nimField.addEventListener('input', handleNimChange);
             document.getElementById('studentPhone').addEventListener('input', handlePhoneChange);
+            statementField.addEventListener('input', validateStatementRewrite);
 
             showStep(currentStep);
             fetchFacultiesForSelect();
@@ -558,6 +578,10 @@
             const stepElement = document.getElementById(`step-${step}`);
             if (!stepElement) return true;
 
+            if (step === 3) {
+                validateStatementRewrite();
+            }
+
             const stageFields = stepElement.querySelectorAll('input, select, textarea');
             for (const field of stageFields) {
                 if (!field.checkValidity()) {
@@ -591,6 +615,21 @@
             event.target.value = event.target.value.replace(/[^\d+]/g, '');
         }
 
+        function validateStatementRewrite() {
+            const normalized = statementField.value.trim().toLowerCase();
+            if (!normalized) {
+                statementField.setCustomValidity('Wajib diisi.');
+                return;
+            }
+
+            if (normalized !== requiredStatement) {
+                statementField.setCustomValidity('Ketik persis: "saya bersedia".');
+                return;
+            }
+
+            statementField.setCustomValidity('');
+        }
+
         function updateSummary() {
             summaryElements.name.textContent = nameField.value || '-';
             summaryElements.nim.textContent = nimField.value || '-';
@@ -599,6 +638,7 @@
         }
 
         async function handleSubmit() {
+            validateStatementRewrite();
             if (!validateStep(currentStep)) return;
 
             if (!form.checkValidity()) {

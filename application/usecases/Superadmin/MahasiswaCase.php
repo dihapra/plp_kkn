@@ -125,6 +125,53 @@ class MahasiswaCase extends BaseCase
         $this->sendVerificationEmail($student, $normalizedStatus);
     }
 
+    public function deleteRegistration(int $id): void
+    {
+        if ($id <= 0) {
+            throw new \InvalidArgumentException('ID mahasiswa tidak valid.');
+        }
+
+        $student = $this->MahasiswaRepository->find($id);
+        if (!$student) {
+            throw new \InvalidArgumentException('Data mahasiswa tidak ditemukan.');
+        }
+
+        $db = $this->CI->db;
+
+        try {
+            $db->trans_begin();
+
+            $programRows = $db->select('id')
+                ->from('program_mahasiswa')
+                ->where('id_mahasiswa', $id)
+                ->get()
+                ->result_array();
+
+            $programIds = array_map('intval', array_column($programRows, 'id'));
+            if (!empty($programIds)) {
+                $db->where_in('id_program_mahasiswa', $programIds)->delete('syarat_mapel');
+            }
+
+            $db->where('id_mahasiswa', $id)->delete('program_mahasiswa');
+            $this->MahasiswaRepository->delete($id);
+
+            if (!empty($student->id_user)) {
+                $db->where('id', (int) $student->id_user)
+                    ->where('role', 'mahasiswa')
+                    ->delete('users');
+            }
+
+            if ($db->trans_status() === false) {
+                throw new \RuntimeException('Gagal menghapus data mahasiswa.');
+            }
+
+            $db->trans_commit();
+        } catch (\Throwable $e) {
+            $db->trans_rollback();
+            throw $e;
+        }
+    }
+
     public function detailForVerification(int $id): array
     {
         if ($id <= 0) {

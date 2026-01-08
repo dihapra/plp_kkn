@@ -323,6 +323,11 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                                             <i class="bi bi-shield-check me-2 text-success"></i>Verifikasi
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger action-delete" href="#" data-id="${id}">
+                                            <i class="bi bi-trash3 me-2"></i>Hapus
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         `;
@@ -423,6 +428,61 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             setVerificationModalLoading(activeStudent.name);
             verificationModal.show();
             fetchVerificationDetail(rowData.id);
+        });
+
+        $('#dataTable').on('click', '.action-delete', function (e) {
+            e.preventDefault();
+            const rowData = table.row($(this).closest('tr')).data();
+            if (!rowData) {
+                return;
+            }
+
+            const name = rowData.nama || 'mahasiswa';
+            const nimLabel = rowData.nim ? ` (NIM ${rowData.nim})` : '';
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Hapus pendaftaran?',
+                text: `Data ${name}${nimLabel} akan dihapus permanen.`,
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/delete/${rowData.id}`, {
+                        method: 'POST'
+                    });
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload?.message || 'Gagal menghapus data mahasiswa.');
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Terhapus',
+                        text: payload?.message || 'Data mahasiswa berhasil dihapus.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    if (verificationModal && activeStudent.id === rowData.id) {
+                        verificationModal.hide();
+                        activeStudent = { id: null, name: '', nim: '' };
+                    }
+
+                    table.ajax.reload(null, false);
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: error.message || 'Terjadi kesalahan.'
+                    });
+                }
+            });
         });
 
         $btnApprove.on('click', function () {

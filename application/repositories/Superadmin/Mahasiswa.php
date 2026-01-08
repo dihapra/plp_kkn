@@ -210,6 +210,11 @@ class Mahasiswa
         $this->db->where('id', $id)->update('mahasiswa', $data);
     }
 
+    public function delete(int $id): void
+    {
+        $this->db->where('id', $id)->delete('mahasiswa');
+    }
+
     public function find(int $id)
     {
         return $this->db
