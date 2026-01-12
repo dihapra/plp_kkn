@@ -5,6 +5,24 @@
             <p class="mb-0 text-muted">Gunakan menu aksi di kolom terakhir untuk menambah atau mengubah plotting.</p>
         </div>
         <div class="card-body ">
+            <div class="row g-2 mb-3">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body py-2">
+                            <p class="text-muted small mb-1">Dosen belum diplotting</p>
+                            <h6 class="mb-0" id="unassignedDosenCount">0</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body py-2">
+                            <p class="text-muted small mb-1">Mahasiswa belum diplotting</p>
+                            <h6 class="mb-0" id="unassignedStudentCount">0</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="d-flex flex-wrap gap-2 mb-3 pt-4">
                 <button class="btn btn-primary btn-sm" id="btnOpenModal">
                     <i class="bi bi-plus-circle me-1"></i>Plotting Baru
@@ -58,10 +76,10 @@
                                 tampil di sini.</small>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Mahasiswa Siap PLP</label>
+                            <label class="form-label">Daftar Mahasiswa</label>
                             <select class="form-select" id="modalStudents" multiple size="6" required>
                             </select>
-                            <small class="text-muted d-block mt-1">Pilih minimal 5 mahasiswa sesuai prodi.</small>
+                            <small class="text-muted d-block mt-1">Pilih minimal 5 dan maksimal 13 mahasiswa sesuai prodi.</small>
                         </div>
                     </div>
                 </div>
@@ -190,6 +208,38 @@
 
         function refreshTable() {
             table.clear().rows.add(formatRows(plottingRows)).draw();
+        }
+
+        function updateStatusCards(counts) {
+            const hasCounts = counts
+                && Object.prototype.hasOwnProperty.call(counts, 'unassigned_dosen')
+                && Object.prototype.hasOwnProperty.call(counts, 'unassigned_mahasiswa');
+
+            if (hasCounts) {
+                $('#unassignedDosenCount').text(Number(counts.unassigned_dosen) || 0);
+                $('#unassignedStudentCount').text(Number(counts.unassigned_mahasiswa) || 0);
+                return;
+            }
+
+            const usedDosenIds = getUsedDosenIds();
+            const usedStudentIds = getUsedStudentIds();
+            let unassignedDosen = 0;
+            let unassignedStudents = 0;
+
+            dosenList.forEach(function (dosen) {
+                if (!usedDosenIds.has(dosen.id)) {
+                    unassignedDosen++;
+                }
+            });
+
+            studentList.forEach(function (student) {
+                if (!usedStudentIds.has(student.id)) {
+                    unassignedStudents++;
+                }
+            });
+
+            $('#unassignedDosenCount').text(unassignedDosen);
+            $('#unassignedStudentCount').text(unassignedStudents);
         }
 
         function buildOptions($select, items, placeholder) {
@@ -367,6 +417,14 @@
                 });
                 return;
             }
+            if (studentIds.length > 13) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Mahasiswa terlalu banyak',
+                    text: 'Plotting maksimal 13 mahasiswa.'
+                });
+                return;
+            }
             const currentDosenId = $('#plottingCurrentDosenId').val();
 
             savePlotting({
@@ -430,6 +488,7 @@
                 plottingRows = result?.data?.rows || [];
 
                 refreshTable();
+                updateStatusCards(result?.data?.counts || null);
 
                 if (showToast) {
                     Swal.fire({

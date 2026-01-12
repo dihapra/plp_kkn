@@ -361,6 +361,7 @@ class Kaprodi extends MY_Controller
         try {
             $uc = new PlottingCase();
             $data = $uc->getData();
+            $data['counts'] = $uc->getUnassignedCounts();
             response_json('OK', $data);
         } catch (\Throwable $th) {
             response_error($th->getMessage(), $th, 422);
@@ -383,6 +384,10 @@ class Kaprodi extends MY_Controller
             }));
             if (count($studentIds) < 5) {
                 response_error('Minimal 5 mahasiswa wajib dipilih untuk plotting.', null, 422);
+                return;
+            }
+            if (count($studentIds) > 13) {
+                response_error('Maksimal 13 mahasiswa dapat dipilih untuk plotting.', null, 422);
                 return;
             }
             $currentDosenId = $this->input->post('current_dosen_id');

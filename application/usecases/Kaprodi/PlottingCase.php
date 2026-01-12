@@ -27,6 +27,18 @@ class PlottingCase extends BaseCase
         ];
     }
 
+    public function getUnassignedCounts(): array
+    {
+        $program = $this->getActiveProgram();
+        $programId = (int) $program['id'];
+        $allowedProdiIds = $this->getAllowedProdiIds();
+
+        return [
+            'unassigned_dosen' => $this->countUnassignedDosen($programId, $allowedProdiIds),
+            'unassigned_mahasiswa' => $this->countUnassignedMahasiswa($programId, $allowedProdiIds),
+        ];
+    }
+
     public function savePlotting(int $dosenId, int $sekolahId, array $studentIds, ?int $currentDosenId = null): void
     {
         if ($dosenId <= 0 || $sekolahId <= 0 || empty($studentIds)) {
@@ -345,6 +357,44 @@ class PlottingCase extends BaseCase
             ->row();
 
         return (bool) $row;
+    }
+
+    private function countUnassignedDosen(int $programId, array $allowedProdiIds): int
+    {
+        $builder = $this->CI->db
+            ->select('dosen.id')
+            ->from('program_dosen pd')
+            ->join('dosen', 'dosen.id = pd.id_dosen', 'inner')
+            ->join(
+                'program_mahasiswa pm',
+                'pm.id_program = pd.id_program AND pm.id_dosen = dosen.id AND pm.id_sekolah IS NOT NULL',
+                'left',
+                false
+            )
+            ->where('pd.id_program', $programId)
+            ->group_by('dosen.id')
+            ->having('COUNT(pm.id) = 0', null, false);
+
+        if (!empty($allowedProdiIds)) {
+            $builder->where_in('dosen.id_prodi', $allowedProdiIds);
+        }
+
+        return (int) $builder->get()->num_rows();
+    }
+
+    private function countUnassignedMahasiswa(int $programId, array $allowedProdiIds): int
+    {
+        $builder = $this->CI->db
+            ->from('program_mahasiswa pm')
+            ->join('mahasiswa', 'mahasiswa.id = pm.id_mahasiswa', 'inner')
+            ->where('pm.id_program', $programId)
+            ->where('(pm.id_dosen IS NULL OR pm.id_sekolah IS NULL)', null, false);
+
+        if (!empty($allowedProdiIds)) {
+            $builder->where_in('mahasiswa.id_prodi', $allowedProdiIds);
+        }
+
+        return (int) $builder->count_all_results();
     }
 
     private function getDosenList(int $programId, array $allowedProdiIds): array
