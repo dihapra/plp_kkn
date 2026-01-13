@@ -10,8 +10,8 @@
                     <div class="sb-sidenav-menu-heading">Admin</div>
 
                     <!-- Master Data -->
-                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                        data-bs-target="#collapseMasterData" aria-expanded="false" aria-controls="collapseMasterData">
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMasterData"
+                        aria-expanded="false" aria-controls="collapseMasterData">
                         <div class="sb-nav-link-icon"><i class="bi bi-columns-gap"></i></div>
                         Master Data
                         <div class="sb-sidenav-collapse-arrow"><i class="bi bi-chevron-down"></i></div>
@@ -28,8 +28,8 @@
                     </div>
 
                     <!-- Aktivitas (gabung jadi satu collapse, tidak pakai ID duplikat) -->
-                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                        data-bs-target="#collapseActivity" aria-expanded="false" aria-controls="collapseActivity">
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseActivity"
+                        aria-expanded="false" aria-controls="collapseActivity">
                         <div class="sb-nav-link-icon"><i class="bi bi-activity"></i></div>
                         Aktivitas
                         <div class="sb-sidenav-collapse-arrow"><i class="bi bi-chevron-down"></i></div>
@@ -50,43 +50,55 @@
 
                     <!-- Verifikasi -->
                     <div class="sb-sidenav-menu-heading">Verifikasi</div>
-                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseVerifikasi" aria-expanded="false" aria-controls="collapseVerifikasi">
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseVerifikasi"
+                        aria-expanded="false" aria-controls="collapseVerifikasi">
                         <div class="sb-nav-link-icon"><i class="bi bi-shield-check"></i></div>
                         Verifikasi
                         <div class="sb-sidenav-collapse-arrow"><i class="bi bi-caret-down"></i></div>
                     </a>
-                    <div class="collapse" id="collapseVerifikasi" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <div class="collapse" id="collapseVerifikasi" aria-labelledby="headingOne"
+                        data-bs-parent="#sidenavAccordion">
                         <nav class="sb-sidenav-menu-nested nav">
                             <a class="nav-link" href="<?= base_url('admin/verifikasi-guru') ?>">Verifikasi Guru</a>
-                            <a class="nav-link" href="<?= base_url('admin/verifikasi-kepala-sekolah') ?>">Verifikasi Kepala Sekolah</a>
-                            <a class="nav-link" href="<?= base_url('admin/histori-verifikasi-guru') ?>">History Verifikasi Guru</a>
-                            <a class="nav-link" href="<?= base_url('admin/histori-verifikasi-kepsek') ?>">History Verifikasi Kepala Sekolah</a>
+                            <a class="nav-link" href="<?= base_url('admin/verifikasi-kepala-sekolah') ?>">Verifikasi Kepala
+                                Sekolah</a>
+                            <a class="nav-link" href="<?= base_url('admin/histori-verifikasi-guru') ?>">History Verifikasi
+                                Guru</a>
+                            <a class="nav-link" href="<?= base_url('admin/histori-verifikasi-kepsek') ?>">History Verifikasi
+                                Kepala Sekolah</a>
                         </nav>
                     </div>
 
 
                     <!-- Lainnya -->
                     <div class="sb-sidenav-menu-heading">Lainnya</div>
-                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLainnya" aria-expanded="false" aria-controls="collapseLainnya">
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLainnya"
+                        aria-expanded="false" aria-controls="collapseLainnya">
                         <div class="sb-nav-link-icon"><i class="bi bi-gear"></i></div>
                         Lainnya
                         <div class="sb-sidenav-collapse-arrow"><i class="bi bi-caret-down"></i></div>
                     </a>
-                    <div class="collapse" id="collapseLainnya" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <div class="collapse" id="collapseLainnya" aria-labelledby="headingOne"
+                        data-bs-parent="#sidenavAccordion">
                         <nav class="sb-sidenav-menu-nested nav">
-                            <a class="nav-link" href="<?= base_url('admin/sekolah-tanpa-kepsek') ?>">Sekolah Belum Ada Kepsek</a>
-                            <a class="nav-link" href="<?= base_url('admin/mahasiswa-tanpa-guru') ?>">Mahasiswa Belum Ada Guru Pamong</a>
+                            <a class="nav-link" href="<?= base_url('admin/sekolah-tanpa-kepsek') ?>">Sekolah Belum Ada
+                                Kepsek</a>
+                            <a class="nav-link" href="<?= base_url('admin/mahasiswa-tanpa-guru') ?>">Mahasiswa Belum Ada
+                                Guru Pamong</a>
                         </nav>
                     </div>
 
                     <?php if ($role === 'super_admin'): ?>
                         <div class="sb-sidenav-menu-heading">Master Data</div>
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSuperMasterData" aria-expanded="false" aria-controls="collapseSuperMasterData">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseSuperMasterData" aria-expanded="false"
+                            aria-controls="collapseSuperMasterData">
                             <div class="sb-nav-link-icon"><i class="bi bi-database"></i></div>
                             Master Data
                             <div class="sb-sidenav-collapse-arrow"><i class="bi bi-caret-down"></i></div>
                         </a>
-                        <div class="collapse" id="collapseSuperMasterData" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                        <div class="collapse" id="collapseSuperMasterData" aria-labelledby="headingOne"
+                            data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link" href="<?= base_url('admin/sekolah') ?>">Sekolah</a>
                                 <a class="nav-link" href="<?= base_url('admin/user') ?>">User</a>
@@ -127,13 +139,16 @@
                             ],
                         ];
                         foreach ($moduleMenus as $key => $menu):
-                        ?>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseModule<?= ucfirst($key) ?>" aria-expanded="false" aria-controls="collapseModule<?= ucfirst($key) ?>">
+                            ?>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                data-bs-target="#collapseModule<?= ucfirst($key) ?>" aria-expanded="false"
+                                aria-controls="collapseModule<?= ucfirst($key) ?>">
                                 <div class="sb-nav-link-icon"><i class="bi bi-grid-fill"></i></div>
                                 <?= $menu['label'] ?>
                                 <div class="sb-sidenav-collapse-arrow"><i class="bi bi-caret-down"></i></div>
                             </a>
-                            <div class="collapse" id="collapseModule<?= ucfirst($key) ?>" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                            <div class="collapse" id="collapseModule<?= ucfirst($key) ?>" aria-labelledby="headingOne"
+                                data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
                                     <?php foreach ($menu['items'] as $text => $path): ?>
                                         <a class="nav-link" href="<?= base_url($path) ?>"><?= $text ?></a>
@@ -174,7 +189,8 @@
 
                     <!-- Penilaian dropdown -->
                     <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                        data-bs-target="#collapseLecturerEvaluation" aria-expanded="false" aria-controls="collapseLecturerEvaluation">
+                        data-bs-target="#collapseLecturerEvaluation" aria-expanded="false"
+                        aria-controls="collapseLecturerEvaluation">
                         <div class="sb-nav-link-icon"><i class="bi bi-journal-bookmark"></i></div>
                         Penilaian
                         <div class="sb-sidenav-collapse-arrow"><i class="bi bi-chevron-down"></i></div>
@@ -186,8 +202,10 @@
                             <a class="nav-link" href="<?= base_url('dosen/tugas/modul-ajar') ?>">Modul Ajar</a>
                             <a class="nav-link" href="<?= base_url('dosen/tugas/modul-proyek') ?>">Modul Proyek</a>
                             <a class="nav-link" href="<?= base_url('dosen/tugas/bahan-ajar') ?>">Bahan Ajar</a>
-                            <a class="nav-link" href="<?= base_url('dosen/penilaian/intrakurikuler') ?>">Asistensi Intrakurikuler</a>
-                            <a class="nav-link" href="<?= base_url('dosen/penilaian/ekstrakurikuler') ?>">Asistensi Ekstrakurikuler</a>
+                            <a class="nav-link" href="<?= base_url('dosen/penilaian/intrakurikuler') ?>">Asistensi
+                                Intrakurikuler</a>
+                            <a class="nav-link" href="<?= base_url('dosen/penilaian/ekstrakurikuler') ?>">Asistensi
+                                Ekstrakurikuler</a>
                             <a class="nav-link" href="<?= base_url('dosen/penilaian/sikap') ?>">Sikap Mahasiswa</a>
                             <a class="nav-link" href="<?= base_url('dosen/penilaian/analisis') ?>">Analisis Mahasiswa</a>
                             <a class="nav-link" href="<?= base_url('dosen/nilai') ?>">Nilai Final</a>
@@ -215,7 +233,8 @@
 
                     <!-- Penilaian dropdown -->
                     <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                        data-bs-target="#collapseGuruEvaluation" aria-expanded="false" aria-controls="collapseGuruEvaluation">
+                        data-bs-target="#collapseGuruEvaluation" aria-expanded="false"
+                        aria-controls="collapseGuruEvaluation">
                         <div class="sb-nav-link-icon"><i class="bi bi-journal-bookmark"></i></div>
                         Penilaian
                         <div class="sb-sidenav-collapse-arrow"><i class="bi bi-chevron-down"></i></div>
@@ -257,14 +276,20 @@
                         <div class="sb-nav-link-icon"><i class="bi bi-speedometer2"></i></div>
                         Dashboard
                     </a>
+
                     <a class="nav-link" href="<?= base_url('kaprodi/mahasiswa') ?>">
                         <div class="sb-nav-link-icon"><i class="bi bi-mortarboard"></i></div>
                         Mahasiswa
+                    </a>
+                    <a class="nav-link" href="<?= base_url('kaprodi/sekolah') ?>">
+                        <div class="sb-nav-link-icon"><i class="bi bi-building"></i></div>
+                        Sekolah
                     </a>
                     <a class="nav-link" href="<?= base_url('kaprodi/dosen') ?>">
                         <div class="sb-nav-link-icon"><i class="bi bi-people"></i></div>
                         Dosen Pembimbing
                     </a>
+
                     <a class="nav-link" href="<?= base_url('kaprodi/laporan') ?>">
                         <div class="sb-nav-link-icon"><i class="bi bi-clipboard-data"></i></div>
                         Laporan

@@ -1,8 +1,52 @@
 <?php
 
 $route['admin'] = 'admin/index';
+$route['admin/plp1'] = 'admincontroller/plp1/index';
 $route['admin/program'] = 'admin/program';
 $route['admin/program/select'] = 'admin/set_program';
+
+// Admin PLP I module
+$route['admin/plp1/activities'] = 'admincontroller/plp1/activities';
+$route['admin/plp1/report'] = 'admincontroller/plp1/report';
+$route['admin/plp1/absensi'] = 'admincontroller/plp1/absensi';
+$route['admin/plp1/master-data'] = 'admincontroller/plp1/master_data';
+$route['admin/plp1/master-data/sekolah'] = 'admincontroller/plp1/master_data_sekolah';
+$route['admin/plp1/master-data/sekolah/datatable'] = 'admincontroller/plp1/master_data_sekolah_datatable';
+$route['admin/plp1/master-data/sekolah/store'] = 'admincontroller/plp1/master_data_sekolah_store';
+$route['admin/plp1/master-data/sekolah/update/(:num)'] = 'admincontroller/plp1/master_data_sekolah_update/$1';
+$route['admin/plp1/master-data/sekolah/delete/(:num)'] = 'admincontroller/plp1/master_data_sekolah_delete/$1';
+$route['admin/plp1/master-data/sekolah/import'] = 'admincontroller/plp1/master_data_sekolah_import';
+$route['admin/plp1/master-data/mahasiswa-true'] = 'admincontroller/plp1/master_data_mahasiswa_true';
+$route['admin/plp1/master-data/mahasiswa-true/datatable'] = 'admincontroller/plp1/master_data_mahasiswa_true_datatable';
+$route['admin/plp1/master-data/mahasiswa-true/store'] = 'admincontroller/plp1/master_data_mahasiswa_true_store';
+$route['admin/plp1/master-data/mahasiswa-true/update/(:num)'] = 'admincontroller/plp1/master_data_mahasiswa_true_update/$1';
+$route['admin/plp1/master-data/mahasiswa-true/delete/(:num)'] = 'admincontroller/plp1/master_data_mahasiswa_true_delete/$1';
+$route['admin/plp1/master-data/mahasiswa-true/import'] = 'admincontroller/plp1/master_data_mahasiswa_true_import';
+$route['admin/plp1/master-data/dosen'] = 'admincontroller/plp1/master_data_dosen';
+$route['admin/plp1/master-data/dosen/datatable'] = 'admincontroller/plp1/master_data_dosen_datatable';
+$route['admin/plp1/master-data/mahasiswa'] = 'admincontroller/plp1/master_data_mahasiswa';
+$route['admin/plp1/master-data/mahasiswa/datatable'] = 'admincontroller/plp1/master_data_mahasiswa_datatable';
+$route['admin/plp1/master-data/guru'] = 'admincontroller/plp1/master_data_guru';
+$route['admin/plp1/master-data/guru/datatable'] = 'admincontroller/plp1/master_data_guru_datatable';
+$route['admin/plp1/master-data/kepsek'] = 'admincontroller/plp1/master_data_kepsek';
+$route['admin/plp1/master-data/kepsek/datatable'] = 'admincontroller/plp1/master_data_kepsek_datatable';
+$route['admin/plp1/verifikasi/mahasiswa'] = 'admincontroller/plp1/verifikasi_mahasiswa';
+$route['admin/plp1/verifikasi/mahasiswa/datatable'] = 'admincontroller/plp1/verifikasi_mahasiswa_datatable';
+$route['admin/plp1/verifikasi/mahasiswa/detail/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_detail/$1';
+$route['admin/plp1/verifikasi/mahasiswa/status/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_update_status/$1';
+$route['admin/plp1/verifikasi/mahasiswa/delete/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_delete/$1';
+$route['admin/plp1/verifikasi/sekolah'] = 'admincontroller/plp1/verifikasi_sekolah';
+$route['admin/plp1/verifikasi/sekolah/datatable'] = 'admincontroller/plp1/verifikasi_sekolah_datatable';
+$route['admin/plp1/verifikasi/sekolah/detail/(:num)'] = 'admincontroller/plp1/verifikasi_sekolah_detail/$1';
+$route['admin/plp1/verifikasi/sekolah/status/(:num)'] = 'admincontroller/plp1/verifikasi_sekolah_update_status/$1';
+$route['admin/plp1/verifikasi/guru'] = 'admincontroller/plp1/verifikasi_guru';
+$route['admin/plp1/verifikasi/kepsek'] = 'admincontroller/plp1/verifikasi_kepsek';
+
+// Admin filter endpoints (select2 helpers)
+$route['admin/filter/sekolah'] = 'admincontroller/plp1/filter_sekolah';
+$route['admin/filter/prodi'] = 'admincontroller/plp1/filter_prodi';
+$route['admin/filter/fakultas'] = 'admincontroller/plp1/filter_fakultas';
+$route['admin/filter/program'] = 'admincontroller/plp1/filter_program';
 
 $route['admin/mahasiswa/insert'] = 'admincontroller/student/insert_page';
 $route['admin/mahasiswa/simpan'] = 'admincontroller/student/create';
@@ -95,3 +139,4 @@ $route['admin/sekolah-tanpa-kepsek'] = 'admin/sekolah_tanpa_kepsek';
 $route['admin/mahasiswa-tanpa-guru'] = 'admin/mahasiswa_tanpa_guru';
 $route['admin/datatable/sekolah-tanpa-kepsek'] = 'admincontroller/datatable/api_get_sekolah_tanpa_kepsek';
 $route['admin/datatable/mahasiswa-tanpa-guru'] = 'admincontroller/datatable/api_get_mahasiswa_tanpa_guru';
+

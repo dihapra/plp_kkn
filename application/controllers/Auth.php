@@ -19,6 +19,7 @@ class Auth extends MY_Controller
     protected $mkdkAllowedStatuses = ['Lulus', 'Proses', 'Belum Lulus'];
     protected $exclude_methods = [
         'login',
+        'logout',
         'register_guru_page',
         'register_guru',
         'register_kepala_sekolah_page',
@@ -461,7 +462,14 @@ class Auth extends MY_Controller
 
     public function seed()
     {
-        $this->load->model('Seeder_model');
-        $this->Seeder_model->run();
+        $useCase = new \UseCases\Admin\SeederCase();
+        $useCase->run();
+    }
+
+    public function seed_admin()
+    {
+        $useCase = new \UseCases\Admin\SeederCase();
+        $useCase->initialize_data();
+        $useCase->user_seeder();
     }
 }

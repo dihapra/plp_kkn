@@ -25,4 +25,15 @@ class Seeder extends CI_Controller
             echo 'Seeder failed: ' . $e->getMessage();
         }
     }
+
+    public function kaprodi()
+    {
+        try {
+            $this->Seeder_model->kaprodi_seeder();
+            echo 'Seeder kaprodi completed successfully.';
+        } catch (Throwable $e) {
+            log_message('error', 'Seeder kaprodi failed: ' . $e->getMessage());
+            echo 'Seeder kaprodi failed: ' . $e->getMessage();
+        }
+    }
 }

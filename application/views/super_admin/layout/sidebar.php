@@ -47,6 +47,7 @@
                                 'label' => 'Verifikasi',
                                 'children' => [
                                     ['label' => 'Mahasiswa', 'path' => 'super-admin/plp/verifikasi/mahasiswa'],
+                                    ['label' => 'Sekolah', 'path' => 'super-admin/plp/verifikasi/sekolah'],
                                     ['label' => 'Guru', 'path' => 'super-admin/plp/verifikasi/guru'],
                                     ['label' => 'Kepala Sekolah', 'path' => 'super-admin/plp/verifikasi/kepsek'],
                                 ],

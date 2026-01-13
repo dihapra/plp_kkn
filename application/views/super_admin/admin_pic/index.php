@@ -22,7 +22,8 @@
                             <th style="width: 30%;">Nama</th>
                             <th style="width: 30%;">Email</th>
                             <th style="width: 20%;">Fakultas</th>
-                            <th style="width: 15%;">Dibuat</th>
+                            <th style="width: 25%;">Program</th>
+                            <th style="width: 10%;">Dibuat</th>
                             <th class="text-end" style="width: 5%;">Aksi</th>
                         </tr>
                     </thead>
@@ -104,6 +105,13 @@
                 {
                     data: 'fakultas',
                     orderable: true,
+                    render: function (value) {
+                        return value || '-';
+                    }
+                },
+                {
+                    data: 'programs',
+                    orderable: false,
                     render: function (value) {
                         return value || '-';
                     }

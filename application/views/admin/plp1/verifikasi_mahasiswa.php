@@ -11,10 +11,10 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 
     .verification-modal .modal-content {
         border-radius: 1.25rem;
-        background: #0f172a;
-        color: #f8fafc;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.65);
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
     }
 
     .verification-modal .modal-header,
@@ -26,10 +26,10 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     .verification-detail-card {
         border-radius: 1rem;
         border: 1px solid rgba(148, 163, 184, 0.35);
-        background: rgba(15, 23, 42, 0.65);
+        background: #f8fafc;
         padding: 1.25rem;
         min-height: 360px;
-        color: #e2e8f0;
+        color: #0f172a;
     }
 
     .verification-detail-list .detail-row {
@@ -46,7 +46,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     }
 
     .verification-detail-list .detail-label {
-        color: #cbd5f5;
+        color: #64748b;
         flex: 0 0 48%;
         font-weight: 500;
     }
@@ -55,14 +55,14 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         flex: 0 0 52%;
         text-align: right;
         font-weight: 600;
-        color: #f8fafc;
+        color: #0f172a;
     }
 
     .verification-requirement {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px dashed rgba(148, 163, 184, 0.35);
+        background: #ffffff;
+        border: 1px dashed rgba(148, 163, 184, 0.5);
         border-radius: 0.85rem;
-        color: #e2e8f0;
+        color: #0f172a;
     }
 
     .verification-requirement .badge {
@@ -76,7 +76,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     .verification-modal small,
     #referenceEmptyState,
     #syaratEmptyState {
-        color: rgba(226, 232, 240, 0.75) !important;
+        color: #64748b !important;
     }
 </style>
 
@@ -228,7 +228,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             processing: true,
             serverSide: true,
             ajax: {
-                url: `${baseUrl}super-admin/plp/verifikasi/mahasiswa/datatable`,
+                url: `${baseUrl}admin/plp1/verifikasi/mahasiswa/datatable`,
                 type: 'POST',
                 data: function (d) {
                     d.program_id = $program.val();
@@ -299,6 +299,14 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                     orderable: false,
                     className: 'text-end',
                     render: function (id, __, row) {
+                        const canDelete = (row.status || '').toLowerCase() === 'unverified';
+                        const deleteAction = canDelete ? `
+                                    <li>
+                                        <a class="dropdown-item text-danger action-delete" href="#" data-id="${id}">
+                                            <i class="bi bi-trash3 me-2"></i>Hapus
+                                        </a>
+                                    </li>
+                                ` : '';
                         return `
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -310,11 +318,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                                             <i class="bi bi-shield-check me-2 text-success"></i>Verifikasi
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item text-danger action-delete" href="#" data-id="${id}">
-                                            <i class="bi bi-trash3 me-2"></i>Hapus
-                                        </a>
-                                    </li>
+                                    ${deleteAction}
                                 </ul>
                             </div>
                         `;
@@ -418,6 +422,16 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                 return;
             }
 
+            const status = (rowData.status || '').toLowerCase();
+            if (status !== 'unverified') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak bisa dihapus',
+                    text: 'Hanya data berstatus unverified yang bisa dihapus.'
+                });
+                return;
+            }
+
             const name = rowData.nama || 'mahasiswa';
             const nimLabel = rowData.nim ? ` (NIM ${rowData.nim})` : '';
 
@@ -434,7 +448,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                     return;
                 }
                 try {
-                    const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/delete/${rowData.id}`, {
+                    const response = await fetch(`${baseUrl}admin/plp1/verifikasi/mahasiswa/delete/${rowData.id}`, {
                         method: 'POST'
                     });
                     const payload = await response.json();
@@ -476,7 +490,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 
         async function fetchVerificationDetail(id) {
             try {
-                const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/detail/${id}`);
+                const response = await fetch(`${baseUrl}admin/plp1/verifikasi/mahasiswa/detail/${id}`);
                 const payload = await response.json();
                 const payloadMessage = payload && payload.message ? payload.message : null;
                 const payloadData = payload && payload.data ? payload.data : {};
@@ -719,7 +733,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         async function submitStatusChange(status) {
             setActionButtonsDisabled(true);
             try {
-                const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/status/${activeStudent.id}`, {
+                const response = await fetch(`${baseUrl}admin/plp1/verifikasi/mahasiswa/status/${activeStudent.id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'

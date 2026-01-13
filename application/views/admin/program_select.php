@@ -57,21 +57,27 @@
             padding: 32px 40px 40px;
         }
 
-        .program-option {
+        .program-card {
             border: 1px solid rgba(15, 23, 42, 0.08);
             border-radius: 16px;
             padding: 18px 20px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background: rgba(255, 255, 255, 0.92);
         }
 
-        .program-option:hover {
+        .program-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 16px 24px rgba(15, 23, 42, 0.1);
         }
 
-        .program-radio:checked + .program-option {
+        .program-card--active {
             border-color: rgba(14, 165, 233, 0.5);
             box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+        }
+
+        .program-card--selected {
+            border-color: rgba(34, 197, 94, 0.45);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
         }
 
         .btn-primary {
@@ -96,6 +102,15 @@
         .badge-inactive {
             background: rgba(148, 163, 184, 0.2);
             color: #475569;
+        }
+
+        .badge-disabled {
+            background: rgba(148, 163, 184, 0.15);
+            color: #64748b;
+        }
+
+        .program-meta {
+            min-height: 46px;
         }
     </style>
 </head>
@@ -123,54 +138,92 @@
                     <div class="alert alert-success"><?= $this->session->flashdata('success'); ?></div>
                 <?php endif; ?>
 
-                <form action="<?= base_url('admin/program/select'); ?>" method="post">
-                    <?php if (empty($programs)): ?>
-                        <div class="alert alert-warning mb-0">
-                            Program untuk akun ini belum tersedia. Silakan hubungi super admin.
-                        </div>
-                    <?php else: ?>
-                        <div class="row g-3">
-                            <?php foreach ($programs as $program): ?>
-                                <?php
-                                $programId = (int) $program['id'];
-                                $label = strtoupper($program['kode'] ?? '') ?: ($program['nama'] ?? 'Program');
-                                $subtitle = trim(($program['nama'] ?? '') . ' ' . ($program['tahun_ajaran'] ?? ''));
-                                $active = !empty($program['active']);
-                                ?>
-                                <div class="col-12 col-md-6">
-                                    <label class="w-100">
-                                        <input type="radio"
-                                            name="program_id"
-                                            value="<?= $programId; ?>"
-                                            class="visually-hidden program-radio"
-                                            <?= $programId === (int) $selectedProgramId ? 'checked' : ''; ?>
-                                            required>
-                                        <div class="program-option h-100">
-                                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                                <h5 class="mb-0 fw-semibold"><?= html_escape($label); ?></h5>
-                                                <span class="badge <?= $active ? 'badge-active' : 'badge-inactive'; ?>">
-                                                    <?= $active ? 'Aktif' : 'Nonaktif'; ?>
-                                                </span>
-                                            </div>
-                                            <p class="mb-2 text-muted"><?= html_escape(trim($subtitle) ?: 'Program PLP-KKN'); ?></p>
-                                            <?php if (!empty($program['semester'])): ?>
-                                                <small class="text-muted">Semester <?= html_escape($program['semester']); ?></small>
-                                            <?php endif; ?>
-                                        </div>
-                                    </label>
+                <?php
+                $programSlots = [
+                    'plp1' => [
+                        'label' => 'PLP 1',
+                        'subtitle' => 'Pengenalan Lapangan Persekolahan I',
+                    ],
+                    'kkn' => [
+                        'label' => 'KKN',
+                        'subtitle' => 'Kuliah Kerja Nyata',
+                    ],
+                    'plp2' => [
+                        'label' => 'PLP 2',
+                        'subtitle' => 'Pengenalan Lapangan Persekolahan II',
+                    ],
+                ];
+
+                $programByCode = array_fill_keys(array_keys($programSlots), null);
+                foreach ($programs as $program) {
+                    $code = strtolower(trim($program['kode'] ?? ''));
+                    if ($code === '' || !array_key_exists($code, $programByCode)) {
+                        continue;
+                    }
+                    if ($programByCode[$code] !== null) {
+                        continue;
+                    }
+                    $programByCode[$code] = $program;
+                }
+                ?>
+                <?php if (empty($programs)): ?>
+                    <div class="alert alert-warning">
+                        Program untuk akun ini belum tersedia. Silakan hubungi super admin.
+                    </div>
+                <?php endif; ?>
+                <div class="row g-3">
+                    <?php foreach ($programSlots as $code => $slot): ?>
+                        <?php
+                        $program = $programByCode[$code];
+                        $programId = (int) ($program['id'] ?? 0);
+                        $label = strtoupper($program['kode'] ?? $slot['label']);
+                        $subtitle = trim(($program['nama'] ?? '') . ' ' . ($program['tahun_ajaran'] ?? ''));
+                        if ($subtitle === '') {
+                            $subtitle = $slot['subtitle'];
+                        }
+                        $active = !empty($program['active']);
+                        $selected = $programId > 0 && $programId === (int) $selectedProgramId;
+                        $badgeClass = $program ? ($active ? 'badge-active' : 'badge-inactive') : 'badge-disabled';
+                        $badgeText = $program ? ($active ? 'Aktif' : 'Nonaktif') : 'Belum tersedia';
+                        ?>
+                        <div class="col-12 col-md-4">
+                            <div class="program-card h-100 d-flex flex-column <?= $active ? 'program-card--active' : ''; ?> <?= $selected ? 'program-card--selected' : ''; ?>">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0 fw-semibold"><?= html_escape($label); ?></h5>
+                                    <span class="badge <?= $badgeClass; ?>">
+                                        <?= $badgeText; ?>
+                                    </span>
                                 </div>
-                            <?php endforeach; ?>
+                                <div class="program-meta mb-2">
+                                    <p class="mb-1 text-muted"><?= html_escape($subtitle ?: 'Program PLP-KKN'); ?></p>
+                                    <?php if (!empty($program['semester'])): ?>
+                                        <small class="text-muted">Semester <?= html_escape($program['semester']); ?></small>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="mt-auto">
+                                    <?php if ($programId > 0): ?>
+                                        <form action="<?= base_url('admin/program/select'); ?>" method="post">
+                                            <input type="hidden" name="program_id" value="<?= $programId; ?>">
+                                            <button type="submit" class="btn btn-primary w-100" <?= $selected ? 'disabled' : ''; ?>>
+                                                <?= $selected ? 'Sedang Digunakan' : 'Masuk'; ?>
+                                                <i class="bi bi-arrow-right-short ms-1"></i>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                            Tidak tersedia
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4">
-                            <p class="text-muted mb-0">
-                                Program terpilih akan digunakan untuk filter data admin.
-                            </p>
-                            <button type="submit" class="btn btn-primary px-4">
-                                Lanjut ke Dashboard <i class="bi bi-arrow-right-short ms-1"></i>
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                </form>
+                    <?php endforeach; ?>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4">
+                    <p class="text-muted mb-0">
+                        Pilih program yang aktif sesuai kode untuk masuk ke dashboard.
+                    </p>
+                </div>
             </div>
         </div>
     </div>

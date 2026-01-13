@@ -13,10 +13,12 @@ function view_with_layout($view, $title, $role = null, $data = [], $head = null,
     $data['script'] = !empty($script) ? $CI->load->view($script, [], TRUE) : '';
     $data['title'] = $title;
     // Muat layout utama dengan data
-    if($role == 'super_admin'){
+    if ($role == 'super_admin') {
         $CI->load->view('super_admin/layout/app', $data);
-    }else{
+    } elseif ($role == 'admin_plp1') {
+        $CI->load->view('admin/plp1/layout/app', $data);
+    } else {
         $CI->load->view('layout/app', $data);
-
     }
 }
+

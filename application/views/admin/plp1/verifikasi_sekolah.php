@@ -6,15 +6,15 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 
 <style>
     .verification-modal .modal-dialog {
-        max-width: min(1200px, 95vw);
+        max-width: min(960px, 95vw);
     }
 
     .verification-modal .modal-content {
         border-radius: 1.25rem;
-        background: #0f172a;
-        color: #f8fafc;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.65);
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
     }
 
     .verification-modal .modal-header,
@@ -26,17 +26,16 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     .verification-detail-card {
         border-radius: 1rem;
         border: 1px solid rgba(148, 163, 184, 0.35);
-        background: rgba(15, 23, 42, 0.65);
+        background: #f8fafc;
         padding: 1.25rem;
-        min-height: 360px;
-        color: #e2e8f0;
+        color: #0f172a;
     }
 
     .verification-detail-list .detail-row {
         display: flex;
         justify-content: space-between;
         gap: 1rem;
-        padding: 0.35rem 0;
+        padding: 0.4rem 0;
         border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
         font-size: 0.94rem;
     }
@@ -46,47 +45,28 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     }
 
     .verification-detail-list .detail-label {
-        color: #cbd5f5;
-        flex: 0 0 48%;
+        color: #64748b;
+        flex: 0 0 46%;
         font-weight: 500;
     }
 
     .verification-detail-list .detail-value {
-        flex: 0 0 52%;
+        flex: 0 0 54%;
         text-align: right;
         font-weight: 600;
-        color: #f8fafc;
+        color: #0f172a;
     }
 
-    .verification-requirement {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px dashed rgba(148, 163, 184, 0.35);
-        border-radius: 0.85rem;
-        color: #e2e8f0;
-    }
-
-    .verification-requirement .badge {
-        font-size: 0.85rem;
-    }
-
-    .verification-placeholder .placeholder {
-        min-height: 16px;
-    }
-
-    .verification-modal small,
-    #referenceEmptyState,
-    #syaratEmptyState {
-        color: rgba(226, 232, 240, 0.75) !important;
+    .verification-modal small {
+        color: #64748b !important;
     }
 </style>
 
 <div class="super-admin-program super-admin-verification">
     <div class="d-flex justify-content-between align-items-center mt-3 mb-3 flex-wrap gap-3">
         <div>
-            <h3 class="mb-1">Verifikasi Mahasiswa PLP I</h3>
-            <p class="mb-0 text-muted">
-                Tinjau pendaftaran mahasiswa PLP I sebelum memberikan akses penuh ke modul lapangan.
-            </p>
+            <h3 class="mb-1">Verifikasi MOU Sekolah PLP I</h3>
+            <p class="mb-0 text-muted">Tinjau surat kerja sama yang diunggah kaprodi sebelum disetujui.</p>
         </div>
         <span class="badge bg-primary-subtle text-primary px-3 py-2">
             <i class="bi bi-shield-check me-1"></i> Panel verifikasi
@@ -125,7 +105,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="fw-semibold">Daftar Pengajuan Mahasiswa</span>
+            <span class="fw-semibold">Daftar Pengajuan MOU</span>
             <small class="text-muted">Menampilkan data berdasarkan filter di atas.</small>
         </div>
         <div class="card-body px-3 pb-3 pt-3">
@@ -133,11 +113,10 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                 <table id="dataTable" class="table table-sm mb-0 align-middle w-100">
                     <thead>
                         <tr>
-                            <th style="width: 20%;">Nama</th>
-                            <th style="width: 12%;">NIM</th>
-                            <th style="width: 18%;">Program</th>
+                            <th style="width: 22%;">Sekolah</th>
                             <th style="width: 20%;">Prodi</th>
-                            <th style="width: 15%;">Email</th>
+                            <th style="width: 18%;">Program</th>
+                            <th style="width: 15%;">Surat MOU</th>
                             <th style="width: 10%;">Status</th>
                             <th class="text-end" style="width: 5%;">Aksi</th>
                         </tr>
@@ -150,54 +129,29 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 </div>
 
 <div class="modal fade verification-modal" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
                 <div>
-                    <h5 class="modal-title" id="verificationModalTitle">Verifikasi Mahasiswa</h5>
-                    <small class="text-muted" id="verificationModalSubtitle">Periksa detail pendaftaran sebelum disetujui.</small>
+                    <h5 class="modal-title" id="verificationModalTitle">Verifikasi MOU</h5>
+                    <small class="text-muted" id="verificationModalSubtitle">Periksa detail kerja sama sekolah.</small>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body pt-2">
-                <div class="row g-4 flex-lg-nowrap">
-                    <div class="col-lg-6">
-                        <div class="verification-detail-card shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h6 class="mb-1">Data Pendaftaran</h6>
-                                    <small class="text-muted">Data dikirim langsung oleh mahasiswa.</small>
-                                </div>
-                                <span class="badge bg-secondary-subtle text-secondary" id="registrationStatusBadge">-</span>
-                            </div>
-                            <div id="registrationDetails" class="verification-detail-list"></div>
+                <div class="verification-detail-card shadow-sm">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="mb-1">Detail MOU</h6>
+                            <small class="text-muted">Dokumen diunggah oleh kaprodi.</small>
                         </div>
+                        <span class="badge bg-secondary-subtle text-secondary" id="registrationStatusBadge">-</span>
                     </div>
-                    <div class="col-lg-6">
-                        <div class="verification-detail-card shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h6 class="mb-1">Data Mahasiswa Referensi</h6>
-                                    <small class="text-muted">Sumber: Data Mahasiswa Admin</small>
-                                </div>
-                                <span class="badge bg-primary-subtle text-primary d-none" id="referenceProgramBadge"></span>
-                            </div>
-                            <div id="referenceDetails" class="verification-detail-list"></div>
-                            <div id="referenceEmptyState" class="text-muted small fst-italic">Data referensi tidak ditemukan berdasarkan NIM ini.</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4" id="syaratSection">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                        <h6 class="mb-0">Syarat Perkuliahan</h6>
-                        <small class="text-muted" id="syaratUpdatedAt"></small>
-                    </div>
-                    <div class="row row-cols-1 row-cols-md-2 g-3" id="syaratRequirementList"></div>
-                    <div id="syaratEmptyState" class="text-muted small fst-italic">Belum ada data syarat perkuliahan.</div>
+                    <div id="registrationDetails" class="verification-detail-list"></div>
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 flex-wrap gap-3 justify-content-between">
-                <div class="text-muted small">Pastikan seluruh data sesuai sebelum memutuskan.</div>
+                <div class="text-muted small">Pastikan dokumen sesuai sebelum memutuskan.</div>
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Tutup</button>
                     <button type="button" class="btn btn-outline-danger" id="btnRejectVerification">
@@ -218,17 +172,16 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         const $status = $('#filterStatus');
         const $btnApprove = $('#btnApproveVerification');
         const $btnReject = $('#btnRejectVerification');
-        let activeStudent = {
+        let activeMou = {
             id: null,
-            name: '',
-            nim: ''
+            name: ''
         };
 
         const table = $('#dataTable').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: `${baseUrl}super-admin/plp/verifikasi/mahasiswa/datatable`,
+                url: `${baseUrl}admin/plp1/verifikasi/sekolah/datatable`,
                 type: 'POST',
                 data: function (d) {
                     d.program_id = $program.val();
@@ -252,33 +205,35 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             },
             order: [[0, 'asc']],
             columns: [
-                { data: 'nama', orderable: true },
-                { data: 'nim', orderable: true },
+                { data: 'nama_sekolah', orderable: true },
                 {
-                    data: null,
+                    data: 'nama_prodi',
+                    orderable: true,
+                    render: function (text, _, row) {
+                        if (!text) return '-';
+                        return row.fakultas ? `${text}<br><span class="text-muted small">${row.fakultas}</span>` : text;
+                    }
+                },
+                {
+                    data: 'program',
                     orderable: true,
                     render: function (_, __, row) {
                         const code = row.kode_program ? row.kode_program.toUpperCase() : '';
                         const name = row.nama_program || '';
                         const year = row.tahun_ajaran ? ` (${row.tahun_ajaran})` : '';
-                        if (code && year) return `${code}${year}`;
-                        if (code && !year) return code;
+                        if (code) return `${code}${year}`;
                         if (name) return `${name}${year}`;
                         return '-';
                     }
                 },
                 {
-                    data: 'nama_prodi',
-                    orderable: true,
+                    data: 'surat_mou',
+                    orderable: false,
                     render: function (text) {
-                        return text || '-';
-                    }
-                },
-                {
-                    data: 'email',
-                    orderable: true,
-                    render: function (text) {
-                        return text || '-';
+                        if (!text) {
+                            return '<span class="text-muted">-</span>';
+                        }
+                        return `<a href="${baseUrl}${text}" target="_blank" rel="noopener">Lihat Surat</a>`;
                     }
                 },
                 {
@@ -298,7 +253,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                     data: 'id',
                     orderable: false,
                     className: 'text-end',
-                    render: function (id, __, row) {
+                    render: function (id) {
                         return `
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -307,12 +262,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
                                         <a class="dropdown-item action-verify" href="#" data-id="${id}">
-                                            <i class="bi bi-shield-check me-2 text-success"></i>Verifikasi
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item text-danger action-delete" href="#" data-id="${id}">
-                                            <i class="bi bi-trash3 me-2"></i>Hapus
+                                            <i class="bi bi-shield-check me-2 text-success"></i>Detail & Verifikasi
                                         </a>
                                     </li>
                                 </ul>
@@ -335,13 +285,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         const $verificationModalTitle = $('#verificationModalTitle');
         const $verificationModalSubtitle = $('#verificationModalSubtitle');
         const $registrationDetails = $('#registrationDetails');
-        const $referenceDetails = $('#referenceDetails');
-        const $referenceEmptyState = $('#referenceEmptyState');
         const $registrationStatusBadge = $('#registrationStatusBadge');
-        const $referenceProgramBadge = $('#referenceProgramBadge');
-        const $syaratList = $('#syaratRequirementList');
-        const $syaratEmptyState = $('#syaratEmptyState');
-        const $syaratUpdatedAt = $('#syaratUpdatedAt');
 
         function setActionButtonsDisabled(state) {
             $btnApprove.prop('disabled', state);
@@ -349,10 +293,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         }
 
         const registrationFields = [
-            { label: 'Nama', key: 'nama' },
-            { label: 'NIM', key: 'nim' },
-            { label: 'Email', key: 'email' },
-            { label: 'No HP', key: 'no_hp' },
+            { label: 'Sekolah', key: 'nama_sekolah' },
             { label: 'Program Studi', key: 'nama_prodi' },
             { label: 'Fakultas', key: 'fakultas' },
             {
@@ -362,35 +303,20 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                     return formatProgramLabel(record, 'tahun_ajaran');
                 }
             },
-            { label: 'Agama', key: 'agama' },
-            { label: 'Dibuat', key: 'created_at', formatter: formatDateTime },
-            { label: 'Diperbarui', key: 'updated_at', formatter: formatDateTime }
-        ];
-
-        const referenceFields = [
-            { label: 'Nama', key: 'nama' },
-            { label: 'NIM', key: 'nim' },
-            { label: 'Email', key: 'email' },
-            { label: 'No HP', key: 'no_hp' },
-            { label: 'Program Studi', key: 'nama_prodi' },
-            { label: 'Fakultas', key: 'fakultas' },
             {
-                label: 'Program',
-                key: 'kode_program',
-                formatter: function (_, record) {
-                    return formatProgramLabel(record, 'tahun_ajaran_program');
+                label: 'Surat MOU',
+                key: 'surat_mou',
+                allowHtml: true,
+                formatter: function (value) {
+                    if (!value) {
+                        return '-';
+                    }
+                    return `<a href="${baseUrl}${value}" target="_blank" rel="noopener">Lihat Surat</a>`;
                 }
             },
             { label: 'Dibuat', key: 'created_at', formatter: formatDateTime },
             { label: 'Diperbarui', key: 'updated_at', formatter: formatDateTime }
         ];
-
-        const requirementStatusMap = {
-            lulus: { label: 'Lulus', class: 'bg-success-subtle text-success' },
-            proses: { label: 'Proses', class: 'bg-warning-subtle text-warning' },
-            'belum lulus': { label: 'Belum Lulus', class: 'bg-danger-subtle text-danger' },
-            default: { label: 'Tidak Ada', class: 'bg-secondary-subtle text-secondary' }
-        };
 
         $('#dataTable').on('click', '.action-verify', function (e) {
             e.preventDefault();
@@ -401,69 +327,16 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             if (!rowData) {
                 return;
             }
-            activeStudent = {
+            activeMou = {
                 id: rowData.id,
-                name: rowData.nama || 'Mahasiswa',
-                nim: rowData.nim || '-'
+                name: rowData.nama_sekolah || 'Sekolah'
             };
-            setVerificationModalLoading(activeStudent.name);
+            if (verificationModalEl) {
+                verificationModalEl.dataset.mouId = rowData.id ? String(rowData.id) : '';
+            }
+            setVerificationModalLoading(activeMou.name);
             verificationModal.show();
             fetchVerificationDetail(rowData.id);
-        });
-
-        $('#dataTable').on('click', '.action-delete', function (e) {
-            e.preventDefault();
-            const rowData = table.row($(this).closest('tr')).data();
-            if (!rowData) {
-                return;
-            }
-
-            const name = rowData.nama || 'mahasiswa';
-            const nimLabel = rowData.nim ? ` (NIM ${rowData.nim})` : '';
-
-            Swal.fire({
-                icon: 'warning',
-                title: 'Hapus pendaftaran?',
-                text: `Data ${name}${nimLabel} akan dihapus permanen.`,
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                confirmButtonText: 'Ya, hapus',
-                cancelButtonText: 'Batal'
-            }).then(async (result) => {
-                if (!result.isConfirmed) {
-                    return;
-                }
-                try {
-                    const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/delete/${rowData.id}`, {
-                        method: 'POST'
-                    });
-                    const payload = await response.json();
-                    if (!response.ok) {
-                        throw new Error(payload?.message || 'Gagal menghapus data mahasiswa.');
-                    }
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Terhapus',
-                        text: payload?.message || 'Data mahasiswa berhasil dihapus.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    if (verificationModal && activeStudent.id === rowData.id) {
-                        verificationModal.hide();
-                        activeStudent = { id: null, name: '', nim: '' };
-                    }
-
-                    table.ajax.reload(null, false);
-                } catch (error) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: error.message || 'Terjadi kesalahan.'
-                    });
-                }
-            });
         });
 
         $btnApprove.on('click', function () {
@@ -476,12 +349,12 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 
         async function fetchVerificationDetail(id) {
             try {
-                const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/detail/${id}`);
+                const response = await fetch(`${baseUrl}admin/plp1/verifikasi/sekolah/detail/${id}`);
                 const payload = await response.json();
                 const payloadMessage = payload && payload.message ? payload.message : null;
                 const payloadData = payload && payload.data ? payload.data : {};
                 if (!response.ok) {
-                    throw new Error(payloadMessage || 'Gagal memuat detail mahasiswa.');
+                    throw new Error(payloadMessage || 'Gagal memuat detail MOU.');
                 }
                 renderVerificationDetail(payloadData);
             } catch (error) {
@@ -495,51 +368,32 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         }
 
         function renderVerificationDetail(payload) {
-            const registration = payload && payload.pendaftaran ? payload.pendaftaran : null;
-            const reference = payload && payload.referensi ? payload.referensi : null;
-            const syarat = payload && payload.syarat ? payload.syarat : null;
+            const schoolName = payload && payload.nama_sekolah ? payload.nama_sekolah : null;
+            const mouId = payload && payload.id ? payload.id : null;
 
-            const registrationName = registration && registration.nama ? registration.nama : null;
-            const registrationNim = registration && registration.nim ? registration.nim : null;
+            $verificationModalTitle.text(schoolName ? `Verifikasi MOU ${schoolName}` : 'Verifikasi MOU');
+            $verificationModalSubtitle.text('Periksa detail kerja sama sebelum disetujui.');
 
-            $verificationModalTitle.text(registrationName ? `Verifikasi ${registrationName}` : 'Verifikasi Mahasiswa');
-            $verificationModalSubtitle.text(registrationNim ? `NIM ${registrationNim}` : 'Periksa detail pendaftaran sebelum disetujui.');
-
-            if (registrationName) {
-                activeStudent.name = registrationName;
+            if (schoolName) {
+                activeMou.name = schoolName;
             }
-            if (registrationNim) {
-                activeStudent.nim = registrationNim;
+            if (mouId) {
+                activeMou.id = mouId;
+            }
+            if (verificationModalEl && activeMou.id) {
+                verificationModalEl.dataset.mouId = String(activeMou.id);
             }
 
-            setStatusBadge(registration ? registration.status : null);
-
-            renderDetailList($registrationDetails, registrationFields, registration, 'Data pendaftaran tidak tersedia.');
-
-            if (reference) {
-                renderDetailList($referenceDetails, referenceFields, reference, '');
-                $referenceEmptyState.addClass('d-none');
-            } else {
-                $referenceDetails.html('<p class="text-muted small mb-0">Tidak ada data pembanding.</p>');
-                $referenceEmptyState.removeClass('d-none');
-            }
-            setReferenceBadge(reference);
-            renderSyaratList(syarat);
+            setStatusBadge(payload ? payload.status : null);
+            renderDetailList($registrationDetails, registrationFields, payload, 'Data MOU tidak tersedia.');
             setActionButtonsDisabled(false);
         }
 
         function setVerificationModalLoading(name) {
-            $verificationModalTitle.text(`Verifikasi ${name}`);
-            $verificationModalSubtitle.text('Sedang memuat detail mahasiswa...');
+            $verificationModalTitle.text(`Verifikasi MOU ${name}`);
+            $verificationModalSubtitle.text('Sedang memuat detail...');
             $registrationStatusBadge.attr('class', 'badge bg-secondary-subtle text-secondary').text('Memuat');
-            $referenceProgramBadge.addClass('d-none').text('');
-            const skeleton = createPlaceholderBlock();
-            $registrationDetails.html(skeleton);
-            $referenceDetails.html(skeleton);
-            $referenceEmptyState.addClass('d-none');
-            $syaratList.empty();
-            $syaratEmptyState.addClass('d-none');
-            $syaratUpdatedAt.text('');
+            $registrationDetails.html(createPlaceholderBlock());
             setActionButtonsDisabled(true);
         }
 
@@ -566,48 +420,6 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             $container.html(rows);
         }
 
-        function renderSyaratList(data) {
-            if (!data) {
-                $syaratList.empty();
-                $syaratEmptyState.removeClass('d-none');
-                $syaratUpdatedAt.text('');
-                return;
-            }
-
-            const totalSksValue = data.total_sks !== undefined && data.total_sks !== null && data.total_sks !== '' ? data.total_sks : '-';
-            const cards = [
-                renderRequirementCard('Total SKS', totalSksValue, false),
-                renderRequirementCard('Filsafat Pendidikan', data.filsafat_pendidikan),
-                renderRequirementCard('Profesi Kependidikan', data.profesi_kependidikan),
-                renderRequirementCard('Perkembangan Peserta Didik', data.perkembangan_peserta_didik),
-                renderRequirementCard('Psikologi Pendidikan', data.psikologi_pendidikan)
-            ];
-
-            $syaratList.html(cards.join(''));
-            $syaratEmptyState.addClass('d-none');
-            $syaratUpdatedAt.text(data.updated_at ? `Diperbarui ${formatDateTime(data.updated_at)}` : '');
-        }
-
-        function renderRequirementCard(label, rawValue, treatAsStatus = true) {
-            let content = '-';
-            if (treatAsStatus) {
-                const key = typeof rawValue === 'string' ? rawValue.toLowerCase() : '';
-                const meta = requirementStatusMap[key] || requirementStatusMap.default;
-                content = `<span class="badge ${meta.class}">${meta.label}</span>`;
-            } else {
-                content = rawValue !== null && rawValue !== undefined && rawValue !== '' ? escapeHtml(rawValue) : '-';
-            }
-
-            return `
-                <div class="col">
-                    <div class="verification-requirement h-100 p-3">
-                        <span class="text-muted small">${escapeHtml(label)}</span>
-                        <div class="mt-2 fs-5 fw-semibold">${content}</div>
-                    </div>
-                </div>
-            `;
-        }
-
         function setStatusBadge(status) {
             const statusMap = {
                 verified: { label: 'Verified', class: 'bg-success' },
@@ -618,16 +430,6 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             $registrationStatusBadge
                 .attr('class', `badge ${meta.class}`)
                 .text(meta.label);
-        }
-
-        function setReferenceBadge(reference) {
-            if (!reference) {
-                $referenceProgramBadge.addClass('d-none').text('');
-                return;
-            }
-            $referenceProgramBadge
-                .removeClass('d-none')
-                .text(formatProgramLabel(reference, 'tahun_ajaran_program'));
         }
 
         function formatProgramLabel(record, yearKey) {
@@ -687,23 +489,26 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         }
 
         function requestStatusChange(status) {
-            if (!activeStudent.id) {
+            if (!activeMou.id && verificationModalEl && verificationModalEl.dataset.mouId) {
+                activeMou.id = parseInt(verificationModalEl.dataset.mouId, 10);
+            }
+            if (!activeMou.id) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Belum ada data',
-                    text: 'Pilih mahasiswa terlebih dahulu.'
+                    text: 'Pilih data MOU terlebih dahulu.'
                 });
                 return;
             }
 
-            const name = activeStudent.name || 'mahasiswa';
+            const name = activeMou.name || 'sekolah';
             const promptText = status === 'verified'
-                ? `Pastikan ${name} telah memenuhi persyaratan sebelum disetujui.`
+                ? `Pastikan dokumen MOU untuk ${name} sudah sesuai sebelum disetujui.`
                 : `Pastikan ${name} sudah diberi catatan terkait penolakan.`;
 
             Swal.fire({
                 icon: 'question',
-                title: status === 'verified' ? 'Verifikasi mahasiswa?' : 'Tolak pendaftaran?',
+                title: status === 'verified' ? 'Verifikasi MOU?' : 'Tolak MOU?',
                 text: promptText,
                 showCancelButton: true,
                 confirmButtonText: status === 'verified' ? 'Ya, verifikasi' : 'Ya, tolak',
@@ -719,7 +524,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         async function submitStatusChange(status) {
             setActionButtonsDisabled(true);
             try {
-                const response = await fetch(`${baseUrl}super-admin/plp/verifikasi/mahasiswa/status/${activeStudent.id}`, {
+                const response = await fetch(`${baseUrl}admin/plp1/verifikasi/sekolah/status/${activeMou.id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'

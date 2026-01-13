@@ -357,6 +357,24 @@ CREATE TABLE `program_sekolah` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `program_sekolah_prodi`
+--
+
+CREATE TABLE `program_sekolah_prodi` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_program_sekolah` int NOT NULL,
+  `id_prodi` int NOT NULL,
+  `surat_mou` varchar(255) DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  `updated_by` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sekolah`
 --
 
@@ -545,6 +563,14 @@ ALTER TABLE `program_sekolah`
   ADD KEY `idx_program_sekolah_sekolah` (`id_sekolah`);
 
 --
+-- Indexes for table `program_sekolah_prodi`
+--
+ALTER TABLE `program_sekolah_prodi`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_program_sekolah_prodi` (`id_program_sekolah`,`id_prodi`),
+  ADD KEY `idx_program_sekolah_prodi_prodi` (`id_prodi`);
+
+--
 -- Indexes for table `sekolah`
 --
 ALTER TABLE `sekolah`
@@ -666,6 +692,12 @@ ALTER TABLE `program_sekolah`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `program_sekolah_prodi`
+--
+ALTER TABLE `program_sekolah_prodi`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `sekolah`
 --
 ALTER TABLE `sekolah`
@@ -778,6 +810,13 @@ ALTER TABLE `program_mahasiswa`
 ALTER TABLE `program_sekolah`
   ADD CONSTRAINT `fk_program_sekolah_program` FOREIGN KEY (`id_program`) REFERENCES `program` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_program_sekolah_sekolah` FOREIGN KEY (`id_sekolah`) REFERENCES `sekolah` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `program_sekolah_prodi`
+--
+ALTER TABLE `program_sekolah_prodi`
+  ADD CONSTRAINT `fk_program_sekolah_prodi_program_sekolah` FOREIGN KEY (`id_program_sekolah`) REFERENCES `program_sekolah` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_program_sekolah_prodi_prodi` FOREIGN KEY (`id_prodi`) REFERENCES `prodi` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Constraints for table `syarat_mapel`

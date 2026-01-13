@@ -23,30 +23,21 @@ class Admin extends MY_Controller
 
     protected function ensureProgramSelection($programId = null)
     {
-        $currentMethod = $this->router->method;
-        if (in_array($currentMethod, ['program', 'set_program'], true)) {
-            return;
-        }
-
-        parent::ensureProgramSelection($programId);
+        return;
     }
 
     public function index()
     {
-        $service = new DashboardService();
-        $data = $service->get_admin_dashboard();
-
-        view_with_layout('admin/index', 'Admin Dashboard', null, $data);
+         redirect('admin/program');
     }
 
     public function program()
     {
         $programs = $this->getAccessiblePrograms();
-        $selectedProgramId = (int) $this->session->userdata('program_id');
 
         $data = [
             'programs' => $programs,
-            'selectedProgramId' => $selectedProgramId,
+            'selectedProgramId' => 0,
             'userName' => (string) $this->session->userdata('name'),
         ];
 
@@ -59,6 +50,7 @@ class Admin extends MY_Controller
         if ($programId <= 0) {
             $this->session->set_flashdata('error', 'Pilih program terlebih dahulu.');
             redirect('admin/program');
+            return;
         }
 
         $programs = $this->getAccessiblePrograms();
@@ -69,15 +61,43 @@ class Admin extends MY_Controller
         if (!in_array($programId, $programIds, true)) {
             $this->session->set_flashdata('error', 'Program tidak tersedia untuk akun ini.');
             redirect('admin/program');
+            return;
         }
 
-        $this->session->set_userdata([
-            'program_id' => $programId,
-            'id_program' => $programId,
-        ]);
-
         $this->session->set_flashdata('success', 'Program berhasil dipilih.');
-        redirect('admin');
+
+        $selectedProgram = null;
+        foreach ($programs as $program) {
+            // dd($program, $programId);
+            if ((int) $program['id'] == $programId) {
+                $selectedProgram = $program;
+                break;
+            }
+        }
+        // dd($selectedProgram);
+        if (!$selectedProgram) {
+            $this->session->set_flashdata('error', 'Program tidak ditemukan.');
+            redirect('admin/program');
+            return;
+        }
+
+        $redirectRoute = 'admin/program';
+        switch ($selectedProgram['kode']) {
+            case 'plp1':
+                $redirectRoute = 'admin/plp1';
+                break;
+            case 'plp2':
+                $redirectRoute = 'admin/plp2';
+                break;
+            case 'kkn':
+                $redirectRoute = 'admin/kkn';
+                break;
+            default:
+                redirect('admin/program');
+                return;
+        }
+                // dd($redirectRoute);
+        redirect($redirectRoute);
     }
 
     private function getAccessiblePrograms(): array

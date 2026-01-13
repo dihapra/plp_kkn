@@ -1,31 +1,45 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-require_once(APPPATH . 'controllers/superadmincontroller/Modulebase.php');
-
-use UseCases\Superadmin\MahasiswaCase;
-use UseCases\Superadmin\ModuleMasterDataCase;
-use UseCases\Superadmin\SekolahCase;
-use UseCases\Superadmin\ProgramCase;
+require_once(APPPATH . 'controllers/admincontroller/Modulebaseadmin.php');
+use Imports\ImportMahasiswaTrue;
 use Imports\ImportSekolah;
+use UseCases\Admin\MahasiswaCase;
+use UseCases\Admin\MahasiswaTrueCase;
+use UseCases\Admin\ModuleMasterDataCase;
+use UseCases\Admin\ProgramCase;
+use UseCases\Admin\ProdiCase;
+use UseCases\Admin\SekolahCase;
 
-class Plp1 extends Modulebase
+class Plp1 extends Modulebaseadmin
 {
     protected $moduleLabel = 'PLP I';
     protected $moduleSlug  = 'plp';
     protected $pageDescriptions = [
         'master_data'         => 'Master data PLP I berisi relasi mahasiswa dengan dosen pembimbing, guru pamong, dan sekolah mitra aktif.',
-        'activities'            => 'Pantau seluruh aktivitas mahasiswa PLP I dari tahap briefing hingga monitoring lapangan.',
-        'report'                => 'Konsolidasi laporan mingguan maupun akhir agar dapat segera disahkan.',
-        'absensi'               => 'Review data kehadiran mahasiswa dan guru pamong secara terpusat.',
-        'verifikasi_mahasiswa'  => 'Kelola proses pemeriksaan dokumen mahasiswa sebelum diteruskan ke dosen pembimbing.',
-        'verifikasi_guru'       => 'Pastikan data guru pamong terverifikasi sebelum diberi akses akun.',
-        'verifikasi_kepsek'     => 'Pantau verifikasi akun kepala sekolah dan kelengkapan berkasnya.',
+        'activities'          => 'Pantau seluruh aktivitas mahasiswa PLP I dari tahap briefing hingga monitoring lapangan.',
+        'report'              => 'Konsolidasi laporan mingguan maupun akhir agar dapat segera disahkan.',
+        'absensi'             => 'Review data kehadiran mahasiswa dan guru pamong secara terpusat.',
+        'verifikasi_mahasiswa'=> 'Kelola proses pemeriksaan dokumen mahasiswa sebelum diteruskan ke dosen pembimbing.',
+        'verifikasi_guru'     => 'Pastikan data guru pamong terverifikasi sebelum diberi akses akun.',
+        'verifikasi_kepsek'   => 'Pantau verifikasi akun kepala sekolah dan kelengkapan berkasnya.',
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    public function index()
+    {
+        $data = $this->buildDashboardData('activities', 'Kegiatan');
+        view_with_layout('admin/plp1/index', 'Admin PLP I - Dashboard', 'admin_plp1', $data);
+    }
 
     public function activities()
     {
-        $this->renderModulePage('activities', 'Kegiatan');
+        $data = $this->buildDashboardData('activities', 'Kegiatan');
+        view_with_layout('admin/plp1/modules/under_development', 'Admin PLP I - Kegiatan', 'admin_plp1', $data);
     }
 
     public function report()
@@ -40,7 +54,7 @@ class Plp1 extends Modulebase
 
     public function master_data()
     {
-        redirect('super-admin/plp/master-data/mahasiswa');
+        redirect('admin/plp1/master-data/mahasiswa');
         return;
     }
 
@@ -52,9 +66,9 @@ class Plp1 extends Modulebase
         ];
 
         view_with_layout(
-            'super_admin/plp1/master-data/sekolah/index',
-            'Super Admin - PLP I Master Data Sekolah',
-            'super_admin',
+            'admin/plp1/master-data/sekolah/index',
+            'Admin PLP I - Master Data Sekolah',
+            'admin_plp1',
             $viewData,
             null,
             'script/datatable'
@@ -81,9 +95,9 @@ class Plp1 extends Modulebase
         ];
 
         view_with_layout(
-            'super_admin/plp1/master-data/mahasiswa_true/index',
-            'Super Admin - PLP I Data Mahasiswa Admin',
-            'super_admin',
+            'admin/plp1/master-data/mahasiswa_true/index',
+            'Admin PLP I - Data Mahasiswa Admin',
+            'admin_plp1',
             $viewData,
             null,
             'script/datatable'
@@ -108,9 +122,9 @@ class Plp1 extends Modulebase
         ];
 
         view_with_layout(
-            'super_admin/plp1/verifikasi_mahasiswa',
-            'Super Admin - PLP I Verifikasi Mahasiswa',
-            'super_admin',
+            'admin/plp1/verifikasi_mahasiswa',
+            'Admin PLP I - Verifikasi Mahasiswa',
+            'admin_plp1',
             $viewData,
             null,
             'script/datatable'
@@ -135,9 +149,9 @@ class Plp1 extends Modulebase
         ];
 
         view_with_layout(
-            'super_admin/plp1/verifikasi_sekolah',
-            'Super Admin - PLP I Verifikasi Sekolah',
-            'super_admin',
+            'admin/plp1/verifikasi_sekolah',
+            'Admin PLP I - Verifikasi Sekolah',
+            'admin_plp1',
             $viewData,
             null,
             'script/datatable'
@@ -541,6 +555,136 @@ class Plp1 extends Modulebase
         $this->masterDataDatatableResponse('kepsek');
     }
 
+    public function master_data_mahasiswa_true_datatable()
+    {
+        $req = get_param_datatable();
+        $req['filter_program'] = (int) ($this->input->post('program_id') ?? 0);
+
+        $uc = new MahasiswaTrueCase();
+        $data = $uc->datatable($req);
+
+        datatable_response_array(
+            $req['draw'],
+            $data['count_total'],
+            $data['count_filtered'],
+            $data['formatted']
+        );
+    }
+
+    public function master_data_mahasiswa_true_store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaTrueCase();
+            $payload = $this->input->post(null, true) ?? [];
+            $uc->create($payload);
+            response_json('Data mahasiswa acuan berhasil disimpan.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function master_data_mahasiswa_true_update($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaTrueCase();
+            $payload = $this->input->post(null, true) ?? [];
+            $uc->update((int) $id, $payload);
+            response_json('Data mahasiswa acuan berhasil diperbarui.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function master_data_mahasiswa_true_delete($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaTrueCase();
+            $uc->delete((int) $id);
+            response_json('Data mahasiswa acuan berhasil dihapus.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function master_data_mahasiswa_true_import()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $importer = new ImportMahasiswaTrue();
+            $programCode = $this->input->post('program_code', true);
+            if ($programCode === null || trim((string) $programCode) === '') {
+                $programCode = $this->input->post('program_kode', true);
+            }
+            $importer->import_mahasiswa_true((string) $programCode);
+            response_json('Import mahasiswa berhasil.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function filter_sekolah()
+    {
+        try {
+            $uc = new SekolahCase();
+            $data = $uc->listForFilter();
+            response_json('OK', $data);
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function filter_prodi()
+    {
+        try {
+            $uc = new ProdiCase();
+            $data = $uc->listForFilter();
+            response_json('OK', $data);
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function filter_fakultas()
+    {
+        try {
+            $uc = new ProdiCase();
+            $data = $uc->listFakultas();
+            response_json('OK', $data);
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
+    public function filter_program()
+    {
+        try {
+            $uc = new ProgramCase();
+            $data = $uc->listForFilter();
+            response_json('OK', $data);
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
     protected function renderMasterDataEntity(string $entityKey): void
     {
         $configs = $this->getMasterDataConfigs();
@@ -555,14 +699,14 @@ class Plp1 extends Modulebase
             'activeProgram' => $activeProgram,
             'entityKey'     => $entityKey,
             'config'        => $config,
-            'datatablePath' => sprintf('super-admin/plp/master-data/%s/datatable', $entityKey),
+            'datatablePath' => sprintf('admin/plp1/master-data/%s/datatable', $entityKey),
         ];
 
-        $title = sprintf('Super Admin - PLP I Master Data %s', $config['title']);
+        $title = sprintf('Admin PLP I - Master Data %s', $config['title']);
         view_with_layout(
-            'super_admin/plp1/master_data_entity',
+            'admin/plp1/master_data_entity',
             $title,
-            'super_admin',
+            'admin_plp1',
             $viewData,
             null,
             'script/datatable'
@@ -635,6 +779,134 @@ class Plp1 extends Modulebase
         }
 
         return $options;
+    }
+
+    protected function renderModulePage(string $pageKey, string $pageTitle): void
+    {
+        $data = $this->buildDashboardData($pageKey, $pageTitle);
+        $title = sprintf('Admin PLP I - %s', $pageTitle);
+        view_with_layout('admin/plp1/modules/under_development', $title, 'admin_plp1', $data);
+    }
+
+    private function buildDashboardData(string $pageKey, string $pageTitle): array
+    {
+        $activeProgram = $this->getActivePlpProgram();
+        $programId = $activeProgram ? (int) $activeProgram['id'] : 0;
+
+        $summary = [
+            'mahasiswa' => $programId > 0
+                ? (int) $this->db->where('id_program', $programId)->count_all_results('program_mahasiswa')
+                : 0,
+            'dosen' => $programId > 0
+                ? (int) $this->db->where('id_program', $programId)->count_all_results('program_dosen')
+                : 0,
+            'kepsek' => $programId > 0
+                ? (int) $this->db->where('id_program', $programId)->count_all_results('program_kepsek')
+                : 0,
+            'sekolah' => $programId > 0
+                ? (int) $this->db->where('id_program', $programId)->count_all_results('program_sekolah')
+                : 0,
+        ];
+
+        return [
+            'module_label'   => $this->moduleLabel,
+            'page_title'     => $pageTitle,
+            'description'    => $this->pageDescriptions[$pageKey] ?? '',
+            'active_program' => $activeProgram,
+            'summary'        => $summary,
+        ];
+    }
+
+    protected function buildHighlights(string $pageTitle): array
+    {
+        $lowerTitle = strtolower($pageTitle);
+        return [
+            [
+                'icon'  => 'bi-diagram-3',
+                'title' => 'Struktur Data',
+                'body'  => 'Kerangka database siap, menunggu sinkronisasi sumber data ' . $lowerTitle . '.',
+            ],
+            [
+                'icon'  => 'bi-lightning-charge',
+                'title' => 'Integrasi Modul',
+                'body'  => 'Akses menu telah aktif. Endpoint layanan ' . $lowerTitle . ' sedang disiapkan.',
+            ],
+            [
+                'icon'  => 'bi-people',
+                'title' => 'Koordinasi Tim',
+                'body'  => 'PIC modul sudah tercatat. Silakan susun kebutuhan tambahan sebelum pengembangan lanjutan.',
+            ],
+        ];
+    }
+
+    protected function buildChecklist(string $pageKey): array
+    {
+        $default = [
+            ['label' => 'Inventarisasi kebutuhan data', 'status' => 'progress'],
+            ['label' => 'Susun SOP operasional', 'status' => 'pending'],
+            ['label' => 'Mapping akses pengguna', 'status' => 'pending'],
+        ];
+
+        $map = [
+            'activities' => [
+                ['label' => 'Kumpulkan template aktivitas dari tim lapangan', 'status' => 'progress'],
+                ['label' => 'Tentukan penanggung jawab update harian', 'status' => 'pending'],
+                ['label' => 'Siapkan integrasi jadwal', 'status' => 'pending'],
+            ],
+            'report' => [
+                ['label' => 'Definisikan struktur laporan', 'status' => 'progress'],
+                ['label' => 'Mapping timeline pengumpulan', 'status' => 'pending'],
+                ['label' => 'Review kebutuhan tanda tangan digital', 'status' => 'pending'],
+            ],
+            'verifikasi' => [
+                ['label' => 'List validator dan wewenang', 'status' => 'progress'],
+                ['label' => 'Konfigurasi notifikasi verifikasi', 'status' => 'pending'],
+                ['label' => 'Siapkan log audit', 'status' => 'pending'],
+            ],
+            'absensi' => [
+                ['label' => 'Tentukan sumber data presensi', 'status' => 'progress'],
+                ['label' => 'Susun aturan toleransi keterlambatan', 'status' => 'pending'],
+                ['label' => 'Review format ekspor absensi', 'status' => 'pending'],
+            ],
+            'verifikasi_mahasiswa' => [
+                ['label' => 'Mapping validator mahasiswa', 'status' => 'progress'],
+                ['label' => 'Siapkan template notifikasi kelengkapan', 'status' => 'pending'],
+                ['label' => 'Susun arsip digital per mahasiswa', 'status' => 'pending'],
+            ],
+            'verifikasi_guru' => [
+                ['label' => 'Daftar kebutuhan dokumen guru pamong', 'status' => 'progress'],
+                ['label' => 'Tetapkan alur persetujuan dengan sekolah', 'status' => 'pending'],
+                ['label' => 'Rancang monitoring pencairan insentif', 'status' => 'pending'],
+            ],
+            'verifikasi_kepsek' => [
+                ['label' => 'Identifikasi PIC tiap sekolah', 'status' => 'progress'],
+                ['label' => 'Konfirmasi kebutuhan tanda tangan digital', 'status' => 'pending'],
+                ['label' => 'Siapkan log aktivitas verifikasi', 'status' => 'pending'],
+            ],
+        ];
+
+        return $map[$pageKey] ?? $default;
+    }
+
+    protected function supportingLinks(): array
+    {
+        return [
+            [
+                'label'  => 'Dokumen kebutuhan modul',
+                'url'    => '#',
+                'status' => 'draft',
+            ],
+            [
+                'label'  => 'Template koordinasi lintas peran',
+                'url'    => '#',
+                'status' => 'draft',
+            ],
+            [
+                'label'  => 'Hubungi PIC pengembangan',
+                'url'    => 'mailto:support@plp-kkn.local',
+                'status' => 'ready',
+            ],
+        ];
     }
 
     private function getMasterDataConfigs(): array

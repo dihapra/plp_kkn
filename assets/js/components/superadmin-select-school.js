@@ -1,9 +1,10 @@
 $(document).ready(async function () {
     let selectData = [];
+    const filterBasePath = window.filterBasePath || 'super-admin';
 
     async function fetchSchools() {
         try {
-            const response = await fetch(`${baseUrl}super-admin/filter/sekolah`);
+            const response = await fetch(`${baseUrl}${filterBasePath}/filter/sekolah`);
             if (!response.ok) {
                 throw new Error('Gagal mengambil data sekolah.');
             }

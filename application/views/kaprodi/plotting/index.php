@@ -72,7 +72,7 @@
                             <select class="form-select" id="modalSchool" required>
                                 <option value="">Pilih sekolah...</option>
                             </select>
-                            <small class="text-muted d-block mt-1" id="modalSchoolInfo">Informasi slot sekolah akan
+                            <small class="text-muted d-block mt-1" id="modalSchoolInfo">Informasi sekolah akan
                                 tampil di sini.</small>
                         </div>
                         <div class="col-12">
@@ -159,9 +159,6 @@
 
                 const dosenTerisi = dosen && dosen.kuota ? dosen.kuota.terisi : 0;
                 const dosenTotal = dosen && dosen.kuota ? dosen.kuota.total : 0;
-                const schoolTerisi = school && school.kuota ? school.kuota.terisi : 0;
-                const schoolTotal = school && school.kuota ? school.kuota.total : 0;
-
                 const dosenHtml = `
                     <div>
                         <strong>${dosen ? dosen.nama : '-'}</strong>
@@ -170,7 +167,6 @@
                 const sekolahHtml = `
                     <div>
                         <strong>${school ? school.nama : '-'}</strong>
-                        <div class="text-muted small">Slot ${schoolTerisi}/${schoolTotal}</div>
                     </div>
                 `;
                 const mahasiswaHtml = studentNames
@@ -339,9 +335,9 @@
         function updateSchoolInfo(schoolId) {
             const school = schoolList.find(function (s) { return s.id === schoolId; });
             if (school) {
-                $('#modalSchoolInfo').text(school.nama + ' -> Slot ' + school.kuota.terisi + '/' + school.kuota.total);
+                $('#modalSchoolInfo').text(school.nama);
             } else {
-                $('#modalSchoolInfo').text('Informasi slot sekolah akan tampil di sini.');
+                $('#modalSchoolInfo').text('Informasi sekolah akan tampil di sini.');
             }
         }
 

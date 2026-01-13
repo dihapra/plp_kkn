@@ -1,9 +1,10 @@
 $(document).ready(async function () {
     let selectData = [];
+    const filterBasePath = window.filterBasePath || 'super-admin';
 
     async function fetchPrograms() {
         try {
-            const response = await fetch(`${baseUrl}super-admin/filter/program`);
+            const response = await fetch(`${baseUrl}${filterBasePath}/filter/program`);
             if (!response.ok) {
                 throw new Error('Gagal mengambil data program.');
             }
@@ -71,4 +72,3 @@ $(document).ready(async function () {
         e.stopPropagation();
     });
 });
-

@@ -221,7 +221,7 @@ class ModuleMasterDataCase extends BaseCase
                 guru.nama AS teacher_name,
                 guru.email,
                 guru.no_hp AS phone,
-                sekolah.nama AS school_name,
+                MIN(sekolah.nama) AS school_name,
                 COUNT(pm.id) AS total_students
             ')
             ->from('program_guru pg')

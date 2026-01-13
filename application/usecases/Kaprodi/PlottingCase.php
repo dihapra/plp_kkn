@@ -14,7 +14,7 @@ class PlottingCase extends BaseCase
         $allowedProdiIds = $this->getAllowedProdiIds();
 
         $dosen = $this->getDosenList($programId, $allowedProdiIds);
-        $sekolah = $this->getSekolahList($programId);
+        $sekolah = $this->getSekolahList($programId, $allowedProdiIds);
         $mahasiswa = $this->getMahasiswaList($programId, $allowedProdiIds);
         $rows = $this->getPlottingRows($programId, $allowedProdiIds);
 
@@ -434,9 +434,9 @@ class PlottingCase extends BaseCase
         }, $rows);
     }
 
-    private function getSekolahList(int $programId): array
+    private function getSekolahList(int $programId, array $allowedProdiIds): array
     {
-        $rows = $this->CI->db
+        $builder = $this->CI->db
             ->select('
                 sekolah.id,
                 sekolah.nama,
@@ -444,8 +444,16 @@ class PlottingCase extends BaseCase
             ')
             ->from('program_sekolah ps')
             ->join('sekolah', 'sekolah.id = ps.id_sekolah', 'inner')
+            ->join('program_sekolah_prodi psp', 'psp.id_program_sekolah = ps.id', 'inner')
             ->join('program_mahasiswa pm', 'pm.id_program = ps.id_program AND pm.id_sekolah = sekolah.id', 'left')
             ->where('ps.id_program', $programId)
+            ->where('psp.status', 'verified');
+
+        if (!empty($allowedProdiIds)) {
+            $builder->where('psp.id_prodi', (int) $allowedProdiIds[0]);
+        }
+
+        $rows = $builder
             ->group_by('sekolah.id')
             ->order_by('sekolah.nama', 'ASC')
             ->get()
@@ -482,7 +490,7 @@ class PlottingCase extends BaseCase
             ->order_by('mahasiswa.nama', 'ASC');
 
         if (!empty($allowedProdiIds)) {
-            $builder->where_in('mahasiswa.id_prodi', $allowedProdiIds);
+            $builder->where('mahasiswa.id_prodi', (int) $allowedProdiIds[0]);
         }
 
         $rows = $builder->get()->result_array();

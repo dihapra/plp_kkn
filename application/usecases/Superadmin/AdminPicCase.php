@@ -32,6 +32,11 @@ class AdminPicCase extends BaseCase
     {
         $data = $this->normalizeAndValidate($payload);
 
+        $activeProgramId = $this->ProgramRepository->get_first_active_id();
+        if (empty($activeProgramId)) {
+            throw new \InvalidArgumentException('Belum ada program aktif untuk admin PIC.');
+        }
+
         $userData = [
             'email' => $data['email'],
             'username' => $data['nama'],
@@ -43,7 +48,22 @@ class AdminPicCase extends BaseCase
             'created_at' => date('Y-m-d H:i:s'),
         ];
 
-        $this->AdminPicRepository->create($userData);
+        $this->CI->db->trans_start();
+        $userId = $this->AdminPicRepository->create($userData);
+
+        $this->CI->db->insert('akses_modul_user', [
+            'id_user' => $userId,
+            'id_program' => (int) $activeProgramId,
+            'aktif' => 1,
+            'created_at' => date('Y-m-d H:i:s'),
+            'created_by' => (int) ($this->CI->session->userdata('id_user') ?? 0) ?: null,
+        ]);
+
+        $this->CI->db->trans_complete();
+
+        if ($this->CI->db->trans_status() === false) {
+            throw new \RuntimeException('Gagal menyimpan akses program admin PIC.');
+        }
     }
 
     public function update(int $id, array $payload): void
@@ -134,6 +154,7 @@ class AdminPicCase extends BaseCase
                 'nama' => $row->nama ?? '',
                 'email' => $row->email ?? '',
                 'fakultas' => $row->fakultas ?? '',
+                'programs' => $row->program_list ?? '',
                 'created_at' => $row->created_at ?? null,
             ];
         }

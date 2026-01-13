@@ -344,6 +344,180 @@ class Kaprodi extends MY_Controller
         view_with_layout('kaprodi/laporan', 'Laporan Kaprodi');
     }
 
+    public function sekolah()
+    {
+        $activeProgram = $this->getActiveProgram();
+        $programId = $activeProgram ? (int) $activeProgram['id'] : 0;
+        $prodiId = $this->getCurrentProdiId();
+        $prodiInfo = $prodiId > 0
+            ? $this->db->select('nama, fakultas')->from('prodi')->where('id', $prodiId)->get()->row_array()
+            : null;
+
+        $programSekolahOptions = [];
+        $rows = [];
+
+        if ($programId > 0) {
+            $programSekolahOptions = $this->db
+                ->select('ps.id, sekolah.nama')
+                ->from('program_sekolah ps')
+                ->join('sekolah', 'sekolah.id = ps.id_sekolah', 'inner')
+                ->where('ps.id_program', $programId)
+                ->order_by('sekolah.nama', 'ASC')
+                ->get()
+                ->result_array();
+
+            if ($prodiId > 0) {
+                $rows = $this->db
+                    ->select('psp.id, psp.surat_mou, psp.status, sekolah.nama AS nama_sekolah')
+                    ->from('program_sekolah_prodi psp')
+                    ->join('program_sekolah ps', 'ps.id = psp.id_program_sekolah', 'inner')
+                    ->join('sekolah', 'sekolah.id = ps.id_sekolah', 'inner')
+                    ->where('psp.id_prodi', $prodiId)
+                    ->where('ps.id_program', $programId)
+                    ->order_by('sekolah.nama', 'ASC')
+                    ->get()
+                    ->result_array();
+            }
+        }
+
+        $viewData = [
+            'activeProgram' => $activeProgram,
+            'programSekolahOptions' => $programSekolahOptions,
+            'rows' => $rows,
+            'prodiInfo' => $prodiInfo,
+        ];
+
+        view_with_layout('kaprodi/sekolah/index', 'Sekolah Kerja Sama', null, $viewData);
+    }
+
+    public function sekolah_store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        $prodiId = $this->getCurrentProdiId();
+        if ($prodiId <= 0) {
+            $this->session->set_flashdata('error', 'Program studi tidak ditemukan.');
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        $programSekolahId = (int) $this->input->post('program_sekolah_id');
+        if ($programSekolahId <= 0) {
+            $this->session->set_flashdata('error', 'Sekolah wajib dipilih.');
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        $activeProgram = $this->getActiveProgram();
+        $programId = $activeProgram ? (int) $activeProgram['id'] : 0;
+        if ($programId <= 0) {
+            $this->session->set_flashdata('error', 'Program aktif tidak ditemukan.');
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        $programSekolah = $this->db
+            ->select('id')
+            ->from('program_sekolah')
+            ->where('id', $programSekolahId)
+            ->where('id_program', $programId)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$programSekolah) {
+            $this->session->set_flashdata('error', 'Sekolah tidak terdaftar pada program aktif.');
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        if (empty($_FILES['surat_mou']['name'])) {
+            $this->session->set_flashdata('error', 'File surat MOU wajib diupload.');
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        $this->load->library('upload');
+        $uploadFolder = './uploads/sekolah/';
+        if (!is_dir($uploadFolder)) {
+            if (!mkdir($uploadFolder, 0777, true)) {
+                $this->session->set_flashdata('error', 'Gagal membuat folder upload.');
+                redirect('kaprodi/sekolah');
+                return;
+            }
+        }
+
+        $config = [
+            'upload_path' => $uploadFolder,
+            'allowed_types' => 'pdf',
+            'max_size' => 1024,
+            'file_name' => 'mou_' . $programSekolahId . '_' . $prodiId . '_' . time(),
+        ];
+        $this->upload->initialize($config);
+
+        if (!$this->upload->do_upload('surat_mou')) {
+            $error = $this->upload->display_errors();
+            $this->session->set_flashdata('error', 'Upload gagal: ' . strip_tags($error));
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        $fileData = $this->upload->data();
+        $filePath = 'uploads/sekolah/' . $fileData['file_name'];
+        $now = date('Y-m-d H:i:s');
+        $userId = (int) $this->session->userdata('id_user');
+
+        $this->db->trans_begin();
+
+        try {
+            $existing = $this->db
+                ->select('id')
+                ->from('program_sekolah_prodi')
+                ->where('id_program_sekolah', $programSekolahId)
+                ->where('id_prodi', $prodiId)
+                ->limit(1)
+                ->get()
+                ->row_array();
+
+            if ($existing) {
+                $this->db
+                    ->where('id', (int) $existing['id'])
+                    ->update('program_sekolah_prodi', [
+                        'surat_mou' => $filePath,
+                        'status' => 'unverified',
+                        'updated_at' => $now,
+                        'updated_by' => $userId ?: null,
+                    ]);
+            } else {
+                $this->db->insert('program_sekolah_prodi', [
+                    'id_program_sekolah' => $programSekolahId,
+                    'id_prodi' => $prodiId,
+                    'surat_mou' => $filePath,
+                    'status' => 'unverified',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                    'created_by' => $userId ?: null,
+                    'updated_by' => $userId ?: null,
+                ]);
+            }
+
+            if ($this->db->trans_status() === false) {
+                throw new \RuntimeException('Gagal menyimpan surat MOU.');
+            }
+
+            $this->db->trans_commit();
+            $this->session->set_flashdata('success', 'Surat MOU berhasil disimpan. Status verifikasi: unverified.');
+        } catch (\Throwable $th) {
+            $this->db->trans_rollback();
+            $this->session->set_flashdata('error', $th->getMessage());
+        }
+
+        redirect('kaprodi/sekolah');
+    }
+
     public function plotting()
     {
         view_with_layout(
@@ -444,5 +618,38 @@ class Kaprodi extends MY_Controller
         $this->db->order_by('nama', 'ASC');
 
         return $this->db->get()->result();
+    }
+
+    private function getCurrentProdiId(): int
+    {
+        $idUser = (int) $this->session->userdata('id_user');
+        if (!$idUser) {
+            return 0;
+        }
+
+        $record = $this->db
+            ->select('id_prodi')
+            ->from('kaprodi')
+            ->where('id_user', $idUser)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        return !empty($record) && !empty($record->id_prodi) ? (int) $record->id_prodi : 0;
+    }
+
+    private function getActiveProgram(): ?array
+    {
+        $row = $this->db
+            ->select('id, kode, nama, tahun_ajaran')
+            ->from('program')
+            ->where('active', 1)
+            ->order_by('updated_at', 'DESC')
+            ->order_by('id', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row_array();
+
+        return $row ?: null;
     }
 }

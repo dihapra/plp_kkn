@@ -1,9 +1,10 @@
 $(document).ready(async function () {
     let selectData = [];
+    const filterBasePath = window.filterBasePath || 'super-admin';
 
     async function fetchProdi() {
         try {
-            const response = await fetch(`${baseUrl}super-admin/filter/prodi`);
+            const response = await fetch(`${baseUrl}${filterBasePath}/filter/prodi`);
             if (!response.ok) {
                 throw new Error('Gagal mengambil data prodi.');
             }
