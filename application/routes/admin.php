@@ -35,6 +35,7 @@ $route['admin/plp1/verifikasi/mahasiswa/datatable'] = 'admincontroller/plp1/veri
 $route['admin/plp1/verifikasi/mahasiswa/export'] = 'admincontroller/plp1/verifikasi_mahasiswa_export';
 $route['admin/plp1/verifikasi/mahasiswa/detail/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_detail/$1';
 $route['admin/plp1/verifikasi/mahasiswa/status/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_update_status/$1';
+$route['admin/plp1/verifikasi/mahasiswa/update/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_update/$1';
 $route['admin/plp1/verifikasi/mahasiswa/delete/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_delete/$1';
 $route['admin/plp1/verifikasi/sekolah'] = 'admincontroller/plp1/verifikasi_sekolah';
 $route['admin/plp1/verifikasi/sekolah/datatable'] = 'admincontroller/plp1/verifikasi_sekolah_datatable';

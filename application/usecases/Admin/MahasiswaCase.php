@@ -14,6 +14,16 @@ class MahasiswaCase extends BaseCase
             $db->trans_begin();
 
             $data = $this->normalizeAndValidate($payload);
+            $existing = $db
+                ->select('id')
+                ->from('mahasiswa')
+                ->where('nim', $data['nim'])
+                ->limit(1)
+                ->get()
+                ->row();
+            if ($existing) {
+                throw new \InvalidArgumentException('NIM sudah terdaftar. Gunakan NIM lain.');
+            }
 
             $nim = $data['nim'];
             $email = $data['email'];
@@ -65,6 +75,17 @@ class MahasiswaCase extends BaseCase
             $db->trans_begin();
 
             $data = $this->normalizeAndValidate($payload);
+            $existing = $db
+                ->select('id')
+                ->from('mahasiswa')
+                ->where('nim', $data['nim'])
+                ->where('id !=', $id)
+                ->limit(1)
+                ->get()
+                ->row();
+            if ($existing) {
+                throw new \InvalidArgumentException('NIM sudah terdaftar. Gunakan NIM lain.');
+            }
 
             if (!empty($row->id_user)) {
                 $userUpdate = [

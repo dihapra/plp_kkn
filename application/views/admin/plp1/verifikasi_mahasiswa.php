@@ -217,6 +217,52 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     </div>
 </div>
 
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editStudentModalLabel">Edit Data Mahasiswa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editStudentForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editStudentId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="editStudentName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">NIM</label>
+                            <input type="text" class="form-control" id="editStudentNim" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editStudentEmail" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">No HP</label>
+                            <input type="text" class="form-control" id="editStudentPhone">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Program Studi</label>
+                            <select class="form-select" id="editStudentProdi" required>
+                                <option value="">Pilih prodi...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     $(function () {
         const $program = $('#filterProgram');
@@ -320,6 +366,11 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
+                                        <a class="dropdown-item action-edit" href="#" data-id="${id}">
+                                            <i class="bi bi-pencil-square me-2 text-primary"></i>Edit
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a class="dropdown-item action-verify" href="#" data-id="${id}">
                                             <i class="bi bi-shield-check me-2 text-success"></i>Verifikasi
                                         </a>
@@ -368,6 +419,16 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         const $syaratList = $('#syaratRequirementList');
         const $syaratEmptyState = $('#syaratEmptyState');
         const $syaratUpdatedAt = $('#syaratUpdatedAt');
+        const editModalEl = document.getElementById('editStudentModal');
+        const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
+        const $editStudentForm = $('#editStudentForm');
+        const $editStudentId = $('#editStudentId');
+        const $editStudentName = $('#editStudentName');
+        const $editStudentNim = $('#editStudentNim');
+        const $editStudentEmail = $('#editStudentEmail');
+        const $editStudentPhone = $('#editStudentPhone');
+        const $editStudentProdi = $('#editStudentProdi');
+        let prodiOptionsLoaded = false;
 
         function setActionButtonsDisabled(state) {
             $btnApprove.prop('disabled', state);
@@ -435,6 +496,18 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
             setVerificationModalLoading(activeStudent.name);
             verificationModal.show();
             fetchVerificationDetail(rowData.id);
+        });
+
+        $('#dataTable').on('click', '.action-edit', function (e) {
+            e.preventDefault();
+            if (!editModal) {
+                return;
+            }
+            const rowData = table.row($(this).closest('tr')).data();
+            if (!rowData) {
+                return;
+            }
+            openEditModal(rowData.id);
         });
 
         $('#dataTable').on('click', '.action-delete', function (e) {
@@ -509,6 +582,122 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
         $btnReject.on('click', function () {
             requestStatusChange('rejected');
         });
+
+        $editStudentForm.on('submit', function (e) {
+            e.preventDefault();
+            submitStudentEdit();
+        });
+
+        async function loadProdiOptions(selectedId) {
+            if (prodiOptionsLoaded) {
+                if (selectedId) {
+                    $editStudentProdi.val(String(selectedId));
+                }
+                return;
+            }
+            try {
+                const response = await fetch(`${baseUrl}admin/filter/prodi`);
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload?.message || 'Gagal memuat daftar prodi.');
+                }
+                const options = payload?.data || [];
+                $editStudentProdi.empty();
+                $editStudentProdi.append(new Option('Pilih prodi...', ''));
+                options.forEach(function (item) {
+                    const label = item.fakultas ? `${item.nama} (${item.fakultas})` : item.nama;
+                    $editStudentProdi.append(new Option(label, item.id));
+                });
+                prodiOptionsLoaded = true;
+                if (selectedId) {
+                    $editStudentProdi.val(String(selectedId));
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal memuat prodi',
+                    text: error.message || 'Terjadi kesalahan.'
+                });
+            }
+        }
+
+        async function openEditModal(id) {
+            try {
+                const response = await fetch(`${baseUrl}admin/plp1/verifikasi/mahasiswa/detail/${id}`);
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload?.message || 'Gagal memuat data mahasiswa.');
+                }
+                const registration = payload?.data?.pendaftaran;
+                if (!registration) {
+                    throw new Error('Data pendaftaran tidak ditemukan.');
+                }
+                $editStudentId.val(registration.id || '');
+                $editStudentName.val(registration.nama || '');
+                $editStudentNim.val(registration.nim || '');
+                $editStudentEmail.val(registration.email || '');
+                $editStudentPhone.val(registration.no_hp || '');
+                await loadProdiOptions(registration.id_prodi || '');
+                if (editModal) {
+                    editModal.show();
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: error.message || 'Terjadi kesalahan.'
+                });
+            }
+        }
+
+        async function submitStudentEdit() {
+            const id = Number($editStudentId.val());
+            if (!id) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data tidak lengkap',
+                    text: 'ID mahasiswa tidak ditemukan.'
+                });
+                return;
+            }
+            try {
+                const payload = new URLSearchParams({
+                    nama: $editStudentName.val().trim(),
+                    nim: $editStudentNim.val().trim(),
+                    email: $editStudentEmail.val().trim(),
+                    no_hp: $editStudentPhone.val().trim(),
+                    id_prodi: $editStudentProdi.val()
+                });
+                const response = await fetch(`${baseUrl}admin/plp1/verifikasi/mahasiswa/update/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    },
+                    body: payload
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result?.message || 'Gagal memperbarui data mahasiswa.');
+                }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: result?.message || 'Data mahasiswa berhasil diperbarui.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                if (editModal) {
+                    editModal.hide();
+                }
+                table.ajax.reload(null, false);
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: error.message || 'Terjadi kesalahan.'
+                });
+            }
+        }
 
         async function fetchVerificationDetail(id) {
             try {

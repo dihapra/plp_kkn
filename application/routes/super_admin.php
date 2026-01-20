@@ -91,6 +91,7 @@ $route['super-admin/plp/verifikasi/mahasiswa/datatable'] = 'superadmincontroller
 $route['super-admin/plp/verifikasi/mahasiswa/export'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_export';
 $route['super-admin/plp/verifikasi/mahasiswa/detail/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_detail/$1';
 $route['super-admin/plp/verifikasi/mahasiswa/status/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_update_status/$1';
+$route['super-admin/plp/verifikasi/mahasiswa/update/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_update/$1';
 $route['super-admin/plp/verifikasi/mahasiswa/delete/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_delete/$1';
 $route['super-admin/plp/verifikasi/sekolah']        = 'superadmincontroller/plp1/verifikasi_sekolah';
 $route['super-admin/plp/verifikasi/sekolah/datatable'] = 'superadmincontroller/plp1/verifikasi_sekolah_datatable';

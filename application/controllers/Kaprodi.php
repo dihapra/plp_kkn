@@ -368,7 +368,7 @@ class Kaprodi extends MY_Controller
 
             if ($prodiId > 0) {
                 $rows = $this->db
-                    ->select('psp.id, psp.surat_mou, psp.status, sekolah.nama AS nama_sekolah')
+                    ->select('psp.id, psp.surat_mou, psp.status, ps.id AS program_sekolah_id, sekolah.nama AS nama_sekolah')
                     ->from('program_sekolah_prodi psp')
                     ->join('program_sekolah ps', 'ps.id = psp.id_program_sekolah', 'inner')
                     ->join('sekolah', 'sekolah.id = ps.id_sekolah', 'inner')
@@ -404,8 +404,19 @@ class Kaprodi extends MY_Controller
             return;
         }
 
-        $programSekolahId = (int) $this->input->post('program_sekolah_id');
-        if ($programSekolahId <= 0) {
+        $agreement = $this->input->post('agreement', true);
+        if ($agreement !== 'yes') {
+            $this->session->set_flashdata('error', 'Pernyataan wajib disetujui.');
+            redirect('kaprodi/sekolah');
+            return;
+        }
+
+        $programSekolahIds = $this->input->post('program_sekolah_id');
+        $programSekolahIds = array_values(array_filter((array) $programSekolahIds, function ($id) {
+            return $id !== null && $id !== '';
+        }));
+        $programSekolahIds = array_map('intval', $programSekolahIds);
+        if (empty($programSekolahIds)) {
             $this->session->set_flashdata('error', 'Sekolah wajib dipilih.');
             redirect('kaprodi/sekolah');
             return;
@@ -419,97 +430,67 @@ class Kaprodi extends MY_Controller
             return;
         }
 
-        $programSekolah = $this->db
-            ->select('id')
-            ->from('program_sekolah')
-            ->where('id', $programSekolahId)
-            ->where('id_program', $programId)
-            ->limit(1)
-            ->get()
-            ->row();
-
-        if (!$programSekolah) {
-            $this->session->set_flashdata('error', 'Sekolah tidak terdaftar pada program aktif.');
-            redirect('kaprodi/sekolah');
-            return;
-        }
-
-        if (empty($_FILES['surat_mou']['name'])) {
-            $this->session->set_flashdata('error', 'File surat MOU wajib diupload.');
-            redirect('kaprodi/sekolah');
-            return;
-        }
-
-        $this->load->library('upload');
-        $uploadFolder = './uploads/sekolah/';
-        if (!is_dir($uploadFolder)) {
-            if (!mkdir($uploadFolder, 0777, true)) {
-                $this->session->set_flashdata('error', 'Gagal membuat folder upload.');
-                redirect('kaprodi/sekolah');
-                return;
-            }
-        }
-
-        $config = [
-            'upload_path' => $uploadFolder,
-            'allowed_types' => 'pdf',
-            'max_size' => 1024,
-            'file_name' => 'mou_' . $programSekolahId . '_' . $prodiId . '_' . time(),
-        ];
-        $this->upload->initialize($config);
-
-        if (!$this->upload->do_upload('surat_mou')) {
-            $error = $this->upload->display_errors();
-            $this->session->set_flashdata('error', 'Upload gagal: ' . strip_tags($error));
-            redirect('kaprodi/sekolah');
-            return;
-        }
-
-        $fileData = $this->upload->data();
-        $filePath = 'uploads/sekolah/' . $fileData['file_name'];
         $now = date('Y-m-d H:i:s');
         $userId = (int) $this->session->userdata('id_user');
 
         $this->db->trans_begin();
 
         try {
-            $existing = $this->db
+            $programSekolahRows = $this->db
                 ->select('id')
-                ->from('program_sekolah_prodi')
-                ->where('id_program_sekolah', $programSekolahId)
-                ->where('id_prodi', $prodiId)
-                ->limit(1)
+                ->from('program_sekolah')
+                ->where('id_program', $programId)
+                ->where_in('id', $programSekolahIds)
                 ->get()
-                ->row_array();
+                ->result_array();
 
-            if ($existing) {
-                $this->db
-                    ->where('id', (int) $existing['id'])
-                    ->update('program_sekolah_prodi', [
-                        'surat_mou' => $filePath,
-                        'status' => 'unverified',
+            if (empty($programSekolahRows)) {
+                throw new \RuntimeException('Sekolah tidak terdaftar pada program aktif.');
+            }
+
+            $validIds = array_map('intval', array_column($programSekolahRows, 'id'));
+            $existingRows = $this->db
+                ->select('id, id_program_sekolah')
+                ->from('program_sekolah_prodi')
+                ->where('id_prodi', $prodiId)
+                ->where_in('id_program_sekolah', $validIds)
+                ->get()
+                ->result_array();
+
+            $existingMap = [];
+            foreach ($existingRows as $row) {
+                $existingMap[(int) $row['id_program_sekolah']] = (int) $row['id'];
+            }
+
+            foreach ($validIds as $programSekolahId) {
+                if (isset($existingMap[$programSekolahId])) {
+                    $this->db
+                        ->where('id', $existingMap[$programSekolahId])
+                        ->update('program_sekolah_prodi', [
+                            'status' => 'verified',
+                            'updated_at' => $now,
+                            'updated_by' => $userId ?: null,
+                        ]);
+                } else {
+                    $this->db->insert('program_sekolah_prodi', [
+                        'id_program_sekolah' => $programSekolahId,
+                        'id_prodi' => $prodiId,
+                        'surat_mou' => null,
+                        'status' => 'verified',
+                        'created_at' => $now,
                         'updated_at' => $now,
+                        'created_by' => $userId ?: null,
                         'updated_by' => $userId ?: null,
                     ]);
-            } else {
-                $this->db->insert('program_sekolah_prodi', [
-                    'id_program_sekolah' => $programSekolahId,
-                    'id_prodi' => $prodiId,
-                    'surat_mou' => $filePath,
-                    'status' => 'unverified',
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                    'created_by' => $userId ?: null,
-                    'updated_by' => $userId ?: null,
-                ]);
+                }
             }
 
             if ($this->db->trans_status() === false) {
-                throw new \RuntimeException('Gagal menyimpan surat MOU.');
+                throw new \RuntimeException('Gagal menyimpan sekolah mitra.');
             }
 
             $this->db->trans_commit();
-            $this->session->set_flashdata('success', 'Surat MOU berhasil disimpan. Status verifikasi: unverified.');
+            $this->session->set_flashdata('success', 'Sekolah mitra berhasil disimpan. Status verifikasi: verified.');
         } catch (\Throwable $th) {
             $this->db->trans_rollback();
             $this->session->set_flashdata('error', $th->getMessage());

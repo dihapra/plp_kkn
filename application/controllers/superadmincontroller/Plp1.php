@@ -441,6 +441,23 @@ class Plp1 extends Modulebase
         }
     }
 
+    public function verifikasi_mahasiswa_update($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        try {
+            $uc = new MahasiswaCase();
+            $payload = $this->input->post(null, true) ?? [];
+            $uc->update((int) $id, $payload);
+            response_json('Data mahasiswa berhasil diperbarui.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
     public function verifikasi_mahasiswa_delete($id)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
