@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $programOptions = $programOptions ?? [];
 $defaultStatus = $defaultStatus ?? 'unverified';
 $defaultProgramId = $programOptions[0]['id'] ?? '';
@@ -116,7 +116,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                             <th style="width: 22%;">Sekolah</th>
                             <th style="width: 20%;">Prodi</th>
                             <th style="width: 18%;">Program</th>
-                            <th style="width: 15%;">Surat MOU</th>
+                            <th style="width: 15%;">Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP</th>
                             <th style="width: 10%;">Status</th>
                             <th class="text-end" style="width: 5%;">Aksi</th>
                         </tr>
@@ -304,7 +304,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                 }
             },
             {
-                label: 'Surat MOU',
+                label: 'Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP',
                 key: 'surat_mou',
                 allowHtml: true,
                 formatter: function (value) {

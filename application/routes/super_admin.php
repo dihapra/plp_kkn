@@ -88,6 +88,7 @@ $route['super-admin/plp/master-data/kepsek']        = 'superadmincontroller/plp1
 $route['super-admin/plp/master-data/kepsek/datatable']  = 'superadmincontroller/plp1/master_data_kepsek_datatable';
 $route['super-admin/plp/verifikasi/mahasiswa']      = 'superadmincontroller/plp1/verifikasi_mahasiswa';
 $route['super-admin/plp/verifikasi/mahasiswa/datatable'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_datatable';
+$route['super-admin/plp/verifikasi/mahasiswa/export'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_export';
 $route['super-admin/plp/verifikasi/mahasiswa/detail/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_detail/$1';
 $route['super-admin/plp/verifikasi/mahasiswa/status/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_update_status/$1';
 $route['super-admin/plp/verifikasi/mahasiswa/delete/(:num)'] = 'superadmincontroller/plp1/verifikasi_mahasiswa_delete/$1';

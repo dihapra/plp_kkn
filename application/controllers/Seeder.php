@@ -36,4 +36,15 @@ class Seeder extends CI_Controller
             echo 'Seeder kaprodi failed: ' . $e->getMessage();
         }
     }
+
+    // public function plotting()
+    // {
+    //     try {
+    //         $this->Seeder_model->plotting_seeder();
+    //         echo 'Seeder plotting completed successfully.';
+    //     } catch (Throwable $e) {
+    //         log_message('error', 'Seeder plotting failed: ' . $e->getMessage());
+    //         echo 'Seeder plotting failed: ' . $e->getMessage();
+    //     }
+    // }
 }

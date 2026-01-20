@@ -40,8 +40,125 @@ class Mahasiswa extends MY_Controller
     }
     public function index()
     {
-        $student = $this->StudentRepository->get_student_relation($this->session->userdata('nim'));
-        view_with_layout('mahasiswa/index', 'SIMPLP UNIMED', ['student' => $student]);
+        redirect('mahasiswa/pilih-program');
+    }
+
+    public function pilih_program()
+    {
+        $programs = $this->getAccessiblePrograms();
+        $selectedProgramId = (int) $this->session->userdata('program_id');
+
+        $data = [
+            'programs' => $programs,
+            'selectedProgramId' => $selectedProgramId,
+            'userName' => (string) $this->session->userdata('name'),
+        ];
+
+        $this->load->view('mahasiswa/program_select', $data);
+    }
+
+    public function set_program()
+    {
+        $programId = (int) $this->input->post('program_id', true);
+        if ($programId <= 0) {
+            $this->session->set_flashdata('error', 'Pilih program terlebih dahulu.');
+            redirect('mahasiswa/pilih-program');
+            return;
+        }
+
+        $programs = $this->getAccessiblePrograms();
+        $programIds = array_map(static function ($program) {
+            return (int) $program['id'];
+        }, $programs);
+
+        if (!in_array($programId, $programIds, true)) {
+            $this->session->set_flashdata('error', 'Program tidak tersedia untuk akun ini.');
+            redirect('mahasiswa/pilih-program');
+            return;
+        }
+
+        $selectedProgram = null;
+        foreach ($programs as $program) {
+            if ((int) $program['id'] === $programId) {
+                $selectedProgram = $program;
+                break;
+            }
+        }
+
+        if (!$selectedProgram) {
+            $this->session->set_flashdata('error', 'Program tidak ditemukan.');
+            redirect('mahasiswa/pilih-program');
+            return;
+        }
+
+        $this->session->set_userdata([
+            'program_id' => $programId,
+            'id_program' => $programId,
+        ]);
+        $this->session->set_flashdata('success', 'Program berhasil dipilih.');
+
+        switch ($selectedProgram['kode']) {
+            case 'plp1':
+                redirect('mahasiswa/plp1');
+                break;
+            default:
+                $this->session->set_flashdata('error', 'Program belum tersedia untuk dashboard mahasiswa.');
+                redirect('mahasiswa/pilih-program');
+                break;
+        }
+    }
+
+    public function plp1()
+    {
+        $programId = (int) $this->session->userdata('program_id');
+        if ($programId <= 0) {
+            $this->session->set_flashdata('error', 'Pilih program terlebih dahulu.');
+            redirect('mahasiswa/pilih-program');
+            return;
+        }
+
+        $programRow = $this->db->select('kode')
+            ->from('program')
+            ->where('id', $programId)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$programRow || strtolower((string) $programRow->kode) !== 'plp1') {
+            $this->session->set_flashdata('error', 'Program yang dipilih tidak sesuai untuk dashboard PLP 1.');
+            redirect('mahasiswa/pilih-program');
+            return;
+        }
+
+        $email = $this->session->userdata('identifier');
+        $registration = $this->db->select('
+                mahasiswa.id,
+                mahasiswa.nim,
+                mahasiswa.email,
+                pm.status,
+                program.nama AS program_name,
+                program.tahun_ajaran
+            ')
+            ->from('mahasiswa')
+            ->join(
+                'program_mahasiswa pm',
+                'pm.id = (SELECT MAX(pm2.id) FROM program_mahasiswa pm2 WHERE pm2.id_mahasiswa = mahasiswa.id)',
+                'left',
+                false
+            )
+            ->join('program', 'program.id = pm.id_program', 'left')
+            ->where('mahasiswa.email', $email)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$registration) {
+            $registration = (object) [];
+        }
+
+        view_with_layout('mahasiswa/index', 'SIMPLP UNIMED', [
+            'registration' => $registration,
+        ]);
     }
     public function tugas()
     {
@@ -148,6 +265,32 @@ class Mahasiswa extends MY_Controller
         } catch (Throwable $e) {
             response_error($e->getMessage(), $e, 422);
         }
+    }
+
+    private function getAccessiblePrograms(): array
+    {
+        $email = $this->session->userdata('identifier');
+        if (empty($email)) {
+            return [];
+        }
+
+        return $this->db
+            ->distinct()
+            ->select('p.id, p.kode, p.nama, p.tahun_ajaran, p.semester, p.active, pm.status')
+            ->from('mahasiswa m')
+            ->join('program_mahasiswa pm', 'pm.id_mahasiswa = m.id', 'inner')
+            ->join('program p', 'p.id = pm.id_program', 'inner')
+            ->where(
+                'pm.id = (SELECT MAX(pm2.id) FROM program_mahasiswa pm2 WHERE pm2.id_mahasiswa = m.id AND pm2.id_program = p.id)',
+                null,
+                false
+            )
+            ->where('m.email', $email)
+            ->order_by('p.active', 'DESC')
+            ->order_by('p.tahun_ajaran', 'DESC')
+            ->order_by('p.nama', 'ASC')
+            ->get()
+            ->result_array();
     }
 
     public function cetak_surat_tugas()

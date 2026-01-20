@@ -64,4 +64,53 @@ class Dashboard
         $this->db->order_by('total', 'DESC');
         return $this->db->get()->result_array();
     }
+
+    public function get_registrants_by_prodi(array $filters = []): array
+    {
+        $this->db->select('prodi.nama AS prodi, COUNT(mahasiswa.id) AS total');
+        $this->db->from('mahasiswa');
+        $this->db->join('prodi', 'prodi.id = mahasiswa.id_prodi', 'left');
+        $this->db->join(
+            'program_mahasiswa pm',
+            'pm.id = (SELECT MAX(pm2.id) FROM program_mahasiswa pm2 WHERE pm2.id_mahasiswa = mahasiswa.id)',
+            'left',
+            false
+        );
+        $this->db->join('program', 'program.id = pm.id_program', 'left');
+        if (!empty($filters['program_code'])) {
+            $this->db->where('program.kode', $filters['program_code']);
+        }
+        if (!empty($filters['tahun_ajaran'])) {
+            $this->db->where('program.tahun_ajaran', $filters['tahun_ajaran']);
+        }
+        $this->db->group_by('prodi.id');
+        $this->db->order_by('total', 'DESC');
+        return $this->db->get()->result_array();
+    }
+
+    public function get_program_codes(): array
+    {
+        return $this->db
+            ->select('program.kode, MIN(program.nama) AS nama')
+            ->from('program')
+            ->where('program.kode IS NOT NULL', null, false)
+            ->where('program.kode <>', '')
+            ->group_by('program.kode')
+            ->order_by('program.kode', 'ASC')
+            ->get()
+            ->result_array();
+    }
+
+    public function get_program_years(): array
+    {
+        return $this->db
+            ->select('program.tahun_ajaran')
+            ->from('program')
+            ->where('program.tahun_ajaran IS NOT NULL', null, false)
+            ->where('program.tahun_ajaran <>', '')
+            ->group_by('program.tahun_ajaran')
+            ->order_by('program.tahun_ajaran', 'DESC')
+            ->get()
+            ->result_array();
+    }
 }

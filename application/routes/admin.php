@@ -32,6 +32,7 @@ $route['admin/plp1/master-data/kepsek'] = 'admincontroller/plp1/master_data_keps
 $route['admin/plp1/master-data/kepsek/datatable'] = 'admincontroller/plp1/master_data_kepsek_datatable';
 $route['admin/plp1/verifikasi/mahasiswa'] = 'admincontroller/plp1/verifikasi_mahasiswa';
 $route['admin/plp1/verifikasi/mahasiswa/datatable'] = 'admincontroller/plp1/verifikasi_mahasiswa_datatable';
+$route['admin/plp1/verifikasi/mahasiswa/export'] = 'admincontroller/plp1/verifikasi_mahasiswa_export';
 $route['admin/plp1/verifikasi/mahasiswa/detail/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_detail/$1';
 $route['admin/plp1/verifikasi/mahasiswa/status/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_update_status/$1';
 $route['admin/plp1/verifikasi/mahasiswa/delete/(:num)'] = 'admincontroller/plp1/verifikasi_mahasiswa_delete/$1';

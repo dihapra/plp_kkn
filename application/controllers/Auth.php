@@ -144,6 +144,9 @@ class Auth extends MY_Controller
     // Page for student registration
     public function register_mahasiswa_page()
     {
+        if ($this->isMahasiswaRegistrationClosed()) {
+            show_404();
+        }
         $data = [
             'activeProgram' => $this->findActiveProgramRow(),
         ];
@@ -155,6 +158,11 @@ class Auth extends MY_Controller
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        if ($this->isMahasiswaRegistrationClosed()) {
+            response_error('Registrasi mahasiswa sudah ditutup.', null, 403);
             return;
         }
 
@@ -377,6 +385,14 @@ class Auth extends MY_Controller
         }
 
         return $result;
+    }
+
+    private function isMahasiswaRegistrationClosed(): bool
+    {
+        $cutoff = new DateTimeImmutable('2026-01-20 00:00:00');
+        $now = new DateTimeImmutable('now');
+        // dd($now->format('Y-m-d H:i:s T'), $cutoff->format('Y-m-d H:i:s T'));
+        return $now >= $cutoff;
     }
 
     private function denyRegistrationFeature(string $label): void

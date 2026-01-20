@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilih Program | Mahasiswa PLP-KKN</title>
+    <link rel="icon" href="<?= base_url('assets/images/unimed.ico'); ?>" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-start: #0b1120;
+            --bg-mid: #1e293b;
+            --bg-end: #22d3ee;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --accent: #0ea5e9;
+            --accent-dark: #0284c7;
+            --text-dark: #0f172a;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.25), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.35), transparent 40%),
+                linear-gradient(135deg, var(--bg-start), var(--bg-mid) 45%, var(--bg-end));
+            color: var(--text-dark);
+        }
+
+        .selection-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+        }
+
+        .selection-card {
+            width: 100%;
+            max-width: 860px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3);
+            overflow: hidden;
+        }
+
+        .selection-header {
+            padding: 32px 40px;
+            background: linear-gradient(120deg, rgba(14, 165, 233, 0.15), rgba(14, 116, 144, 0.08));
+        }
+
+        .selection-body {
+            padding: 32px 40px 40px;
+        }
+
+        .program-card {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 16px;
+            padding: 18px 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .program-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 24px rgba(15, 23, 42, 0.1);
+        }
+
+        .program-card--active {
+            border-color: rgba(14, 165, 233, 0.5);
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+        }
+
+        .program-card--selected {
+            border-color: rgba(34, 197, 94, 0.45);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+        }
+
+        .btn-primary {
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(120deg, var(--accent), var(--accent-dark));
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(120deg, var(--accent-dark), var(--accent));
+        }
+
+        .btn-outline-light {
+            border-radius: 12px;
+        }
+
+        .badge-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #047857;
+        }
+
+        .badge-inactive {
+            background: rgba(148, 163, 184, 0.2);
+            color: #475569;
+        }
+
+        .badge-disabled {
+            background: rgba(148, 163, 184, 0.15);
+            color: #64748b;
+        }
+
+        .badge-verified {
+            background: rgba(34, 197, 94, 0.18);
+            color: #166534;
+        }
+
+        .badge-unverified {
+            background: rgba(250, 204, 21, 0.2);
+            color: #92400e;
+        }
+
+        .badge-rejected {
+            background: rgba(239, 68, 68, 0.18);
+            color: #991b1b;
+        }
+
+        .program-meta {
+            min-height: 46px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="selection-shell">
+        <div class="selection-card">
+            <div class="selection-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <div>
+                    <p class="text-uppercase small text-muted mb-1">Mahasiswa</p>
+                    <h2 class="fw-semibold mb-1">Pilih Program</h2>
+                    <p class="mb-0 text-muted">Hai, <?= html_escape($userName ?: 'Mahasiswa'); ?>. Pilih program sebelum masuk ke dashboard.</p>
+                </div>
+                <div>
+                    <a href="<?= base_url('logout'); ?>" class="btn btn-outline-light btn-sm text-dark border-0">
+                        <i class="bi bi-box-arrow-right me-2"></i>Keluar
+                    </a>
+                </div>
+            </div>
+            <div class="selection-body">
+                <?php if ($this->session->flashdata('error')): ?>
+                    <div class="alert alert-danger"><?= $this->session->flashdata('error'); ?></div>
+                <?php endif; ?>
+                <?php if ($this->session->flashdata('success')): ?>
+                    <div class="alert alert-success"><?= $this->session->flashdata('success'); ?></div>
+                <?php endif; ?>
+
+                <?php
+                $programSlots = [
+                    'plp1' => [
+                        'label' => 'PLP 1',
+                        'subtitle' => 'Pengenalan Lapangan Persekolahan I',
+                    ],
+                    'kkn' => [
+                        'label' => 'KKN',
+                        'subtitle' => 'Kuliah Kerja Nyata',
+                    ],
+                    'plp2' => [
+                        'label' => 'PLP 2',
+                        'subtitle' => 'Pengenalan Lapangan Persekolahan II',
+                    ],
+                ];
+
+                $programByCode = array_fill_keys(array_keys($programSlots), null);
+                foreach ($programs as $program) {
+                    $code = strtolower(trim($program['kode'] ?? ''));
+                    if ($code === '' || !array_key_exists($code, $programByCode)) {
+                        continue;
+                    }
+                    if ($programByCode[$code] !== null) {
+                        continue;
+                    }
+                    $programByCode[$code] = $program;
+                }
+                $plp1Program = $programByCode['plp1'] ?? null;
+                $plp1StatusRaw = strtolower((string) ($plp1Program['status'] ?? ''));
+                $plp1StatusLabel = 'menunggu verifikasi';
+                $plp1StatusClass = 'alert-warning';
+                if ($plp1StatusRaw === 'verified') {
+                    $plp1StatusLabel = 'terverifikasi';
+                    $plp1StatusClass = 'alert-success';
+                } elseif ($plp1StatusRaw === 'rejected') {
+                    $plp1StatusLabel = 'ditolak';
+                    $plp1StatusClass = 'alert-danger';
+                }
+                ?>
+                <?php if (!empty($plp1Program) && !empty($plp1Program['active'])): ?>
+                    <div class="alert <?= $plp1StatusClass; ?>">
+                        Status verifikasi Anda pada program PLP1 saat ini <?= $plp1StatusLabel; ?>.
+                    </div>
+                <?php endif; ?>
+                <?php if (empty($programs)): ?>
+                    <div class="alert alert-warning">
+                        Program untuk akun ini belum tersedia. Silakan hubungi admin.
+                    </div>
+                <?php endif; ?>
+                <div class="row g-3">
+                    <?php foreach ($programSlots as $code => $slot): ?>
+                        <?php
+                        $program = $programByCode[$code];
+                        $programId = (int) ($program['id'] ?? 0);
+                        $label = strtoupper($program['kode'] ?? $slot['label']);
+                        $subtitle = trim(($program['nama'] ?? '') . ' ' . ($program['tahun_ajaran'] ?? ''));
+                        if ($subtitle === '') {
+                            $subtitle = $slot['subtitle'];
+                        }
+                        $active = !empty($program['active']);
+                        $selected = $programId > 0 && $programId === (int) $selectedProgramId;
+                        $badgeClass = $program ? ($active ? 'badge-active' : 'badge-inactive') : 'badge-disabled';
+                        $badgeText = $program ? ($active ? 'Aktif' : 'Nonaktif') : 'Belum tersedia';
+                        $statusLabel = '-';
+                        $statusClass = 'badge-disabled';
+                        if ($programId > 0) {
+                            $statusRaw = strtolower((string) ($program['status'] ?? ''));
+                            $statusLabel = 'Menunggu verifikasi';
+                            $statusClass = 'badge-unverified';
+                            if ($statusRaw === 'verified') {
+                                $statusLabel = 'Terverifikasi';
+                                $statusClass = 'badge-verified';
+                            } elseif ($statusRaw === 'rejected') {
+                                $statusLabel = 'Ditolak';
+                                $statusClass = 'badge-rejected';
+                            }
+                        }
+                        ?>
+                        <div class="col-12 col-md-4">
+                            <div class="program-card h-100 d-flex flex-column <?= $active ? 'program-card--active' : ''; ?> <?= $selected ? 'program-card--selected' : ''; ?>">
+                                <div class="mb-2">
+                                    <span class="badge <?= $statusClass; ?>">Status: <?= $statusLabel; ?></span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-0 fw-semibold"><?= html_escape($label); ?></h5>
+                                    <span class="badge <?= $badgeClass; ?>">
+                                        <?= $badgeText; ?>
+                                    </span>
+                                </div>
+                                <div class="program-meta mb-2">
+                                    <p class="mb-1 text-muted"><?= html_escape($subtitle ?: 'Program PLP-KKN'); ?></p>
+                                    <?php if (!empty($program['semester'])): ?>
+                                        <small class="text-muted">Semester <?= html_escape($program['semester']); ?></small>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="mt-auto">
+                                    <?php if ($programId > 0): ?>
+                                        <form action="<?= base_url('mahasiswa/program/select'); ?>" method="post">
+                                            <input type="hidden" name="program_id" value="<?= $programId; ?>">
+                                            <button type="submit" class="btn btn-primary w-100" <?= $selected ? 'disabled' : ''; ?>>
+                                                <?= $selected ? 'Sedang Digunakan' : 'Masuk'; ?>
+                                                <i class="bi bi-arrow-right-short ms-1"></i>
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                            Tidak tersedia
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4">
+                    <p class="text-muted mb-0">
+                        Pilih program yang aktif sesuai kode untuk masuk ke dashboard.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

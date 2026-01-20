@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $programSekolahOptions = $programSekolahOptions ?? [];
 $rows = $rows ?? [];
 $prodiInfo = $prodiInfo ?? null;
@@ -12,7 +12,7 @@ $prodiLabel = $prodiInfo
 <div class="card shadow-sm mt-4">
     <div class="card-header">
         <h5 class="mb-0">Sekolah Kerja Sama</h5>
-        <small class="text-muted">Upload surat MOU per prodi untuk sekolah mitra.</small>
+        <small class="text-muted">Upload Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP per prodi untuk sekolah mitra.</small>
     </div>
     <div class="card-body">
         <div class="row g-3 align-items-end">
@@ -37,7 +37,7 @@ $prodiLabel = $prodiInfo
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mouUploadModalLabel">Upload Surat MOU</h5>
+                <h5 class="modal-title" id="mouUploadModalLabel">Upload Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="<?= base_url('kaprodi/sekolah/store') ?>" method="post" enctype="multipart/form-data">
@@ -66,7 +66,7 @@ $prodiLabel = $prodiInfo
                             <?php endif; ?>
                         </div>
                         <div class="col-12">
-                            <label for="suratMouInput" class="form-label fw-semibold mb-1">Surat MOU (PDF)</label>
+                            <label for="suratMouInput" class="form-label fw-semibold mb-1">Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP (PDF)</label>
                             <input type="file" class="form-control" id="suratMouInput" name="surat_mou" accept=".pdf,application/pdf" required>
                             <small class="text-muted">Maksimum 1 MB, format PDF.</small>
                         </div>
@@ -85,7 +85,7 @@ $prodiLabel = $prodiInfo
 
 <div class="card shadow-sm mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold">Daftar MOU Sekolah</span>
+        <span class="fw-semibold">Daftar Sekolah</span>
         <small class="text-muted">Status awal otomatis unverified.</small>
     </div>
     <div class="card-body">
@@ -94,14 +94,14 @@ $prodiLabel = $prodiInfo
                 <thead>
                     <tr>
                         <th>Nama Sekolah</th>
-                        <th>Surat MOU</th>
+                        <th>Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($rows)): ?>
                         <tr>
-                            <td colspan="3" class="text-center text-muted">Belum ada surat MOU yang diupload.</td>
+                            <td colspan="3" class="text-center text-muted">Belum ada Surat Keterangan Kerja Sama / Surat Pernyataan Mitra PLP yang diupload.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($rows as $row): ?>

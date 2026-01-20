@@ -27,7 +27,7 @@ class ImportMahasiswaTrue
         ];
     }
 
-    public function import_mahasiswa_true(string $programKode): void
+    public function import_mahasiswa_true(string $programKode, bool $sendVerificationEmail = false): void
     {
         $programKode = trim(strtolower($programKode));
         if ($programKode === '') {
@@ -54,17 +54,16 @@ class ImportMahasiswaTrue
             $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
 
             $rows = [];
+
             foreach ($sheetData as $index => $row) {
                 if ($index === 1) {
                     continue;
                 }
-
+                // dd($row);
                 $nama = isset($row['A']) ? trim((string) $row['A']) : '';
                 $nim = isset($row['B']) ? trim((string) $row['B']) : '';
-                $email = isset($row['C']) ? trim((string) $row['C']) : '';
-                $noHp = isset($row['D']) ? trim((string) $row['D']) : '';
-                $prodiName = isset($row['E']) ? trim((string) $row['E']) : '';
-                $fakultas = isset($row['F']) ? trim((string) $row['F']) : '';
+                $prodiName = isset($row['C']) ? trim((string) $row['C']) : '';
+                $fakultas = isset($row['D']) ? trim((string) $row['D']) : '';
 
                 if ($nama === '' || $nim === '') {
                     continue;
@@ -73,8 +72,6 @@ class ImportMahasiswaTrue
                 $rows[] = [
                     'nama' => $nama,
                     'nim' => $nim,
-                    'email' => $email,
-                    'no_hp' => $noHp,
                     'kode_program' => $programKode,
                     'prodi_name' => $prodiName,
                     'fakultas' => $fakultas,
@@ -106,18 +103,16 @@ class ImportMahasiswaTrue
             $prodiNames = array_unique(array_filter(array_map(static function ($row) {
                 return $row['prodi_name'];
             }, $rows)));
+            // dd($prodiNames, $rows);
 
             $prodiMap = [];
             if (!empty($prodiNames)) {
                 $prodiQuery = $this->db->select('id, nama, fakultas')
                     ->from('prodi')
-                    ->where_in('nama', $prodiNames)
                     ->get();
 
                 foreach ($prodiQuery->result() as $row) {
-                    $nameKey = strtolower($row->nama);
-                    $facultyKey = strtolower((string) $row->fakultas);
-                    $prodiMap[$nameKey . '|' . $facultyKey] = (int) $row->id;
+                    $nameKey = $this->normalizeKey($row->nama);
                     if (!isset($prodiMap[$nameKey])) {
                         $prodiMap[$nameKey] = (int) $row->id;
                     }
@@ -130,52 +125,71 @@ class ImportMahasiswaTrue
 
             $existingNims = [];
             if (!empty($nims)) {
-                $nimQuery = $this->db->select('nim')
-                    ->from('mahasiswa_true')
-                    ->where_in('nim', $nims)
-                    ->get();
-                foreach ($nimQuery->result() as $row) {
-                    $existingNims[$row->nim] = true;
+                foreach (array_chunk($nims, 10) as $nimChunk) {
+                    // dd(array_chunk($nims, 200));
+                    $nimQuery = $this->db->select('nim')
+                        ->from('mahasiswa_true')
+                        ->where_in('nim', $nimChunk)
+                        ->get();
+                    foreach ($nimQuery->result() as $row) {
+                        $existingNims[$row->nim] = true;
+                    }
                 }
             }
 
             $now = date('Y-m-d H:i:s');
             $userId = $this->CI->session->userdata('id_user');
             $insertData = [];
-            $verifyNims = [];
-
+            $verifyTargets = [];
+            $updateData = [];
+            $missingProdi = [];
             foreach ($rows as $row) {
-                $verifyNims[$row['nim']] = true;
+                $prodiId = null;
+                // dd($prodiMap);
+                if ($row['prodi_name'] !== '') {
+                    $nameKey = $this->normalizeKey($row['prodi_name']);
+                    $prodiId = $prodiMap[$nameKey] ?? null;
+                }
+
+                if (!isset($verifyTargets[$row['nim']])) {
+                    $verifyTargets[$row['nim']] = $prodiId;
+                }
+
+                $basePayload = [
+                    'nim' => $row['nim'],
+                    'nama' => $row['nama'],
+                    'id_prodi' => $prodiId,
+                    'id_program' => $programId,
+                    'updated_at' => $now,
+                ];
 
                 if (isset($existingNims[$row['nim']])) {
+                    $updateData[] = $basePayload;
                     continue;
                 }
 
-                $prodiId = null;
-                if ($row['prodi_name'] !== '') {
-                    $key = strtolower($row['prodi_name']) . '|' . strtolower($row['fakultas']);
-                    $prodiId = $prodiMap[$key] ?? $prodiMap[strtolower($row['prodi_name'])] ?? null;
-                }
-
-                $insertData[] = [
-                    'nama' => $row['nama'],
-                    'nim' => $row['nim'],
-                    'email' => $row['email'] !== '' ? $row['email'] : null,
-                    'no_hp' => $row['no_hp'] !== '' ? $row['no_hp'] : null,
-                    'id_prodi' => $prodiId,
-                    'id_program' => $programId,
+                $insertData[] = $basePayload + [
                     'created_at' => $now,
-                    'updated_at' => $now,
                     'created_by' => $userId ? (int) $userId : null,
                 ];
+
+                if ($prodiId === null) {
+                    $missingProdi[$row['nim']] = $row['prodi_name'];
+                }
             }
 
-            if (empty($insertData) && empty($verifyNims)) {
+            if (empty($insertData) && empty($updateData) && empty($verifyTargets)) {
                 throw new Exception('Tidak ada data valid untuk diimpor.');
             }
 
+            if (!empty($missingProdi)) {
+                dd($missingProdi);
+            }
             if (!empty($insertData)) {
                 $this->db->insert_batch('mahasiswa_true', $insertData);
+            }
+            if (!empty($updateData)) {
+                $this->db->update_batch('mahasiswa_true', $updateData, 'nim');
             }
 
             if ($this->db->trans_status() === false) {
@@ -184,7 +198,7 @@ class ImportMahasiswaTrue
             }
 
             $this->db->trans_commit();
-            $this->autoVerifyMahasiswaByNim(array_keys($verifyNims));
+            $this->autoVerifyMahasiswaByNimAndProdi($verifyTargets, $sendVerificationEmail);
             unlink($filePath);
         } catch (Throwable $e) {
             $this->db->trans_rollback();
@@ -206,55 +220,83 @@ class ImportMahasiswaTrue
         return $uploadFolder;
     }
 
-    private function autoVerifyMahasiswaByNim(array $nims): void
+    private function normalizeKey($value): string
     {
-        $nims = array_values(array_unique(array_filter(array_map('trim', $nims))));
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $value = preg_replace('/\s+/', ' ', $value);
+        return strtolower($value);
+    }
+
+    private function autoVerifyMahasiswaByNimAndProdi(array $targets, bool $sendVerificationEmail): void
+    {
+        $nims = array_keys(array_filter($targets, static function ($nim) {
+            return trim((string) $nim) !== '';
+        }, ARRAY_FILTER_USE_KEY));
         if (empty($nims)) {
             return;
         }
 
-        $query = $this->db->select('
-                mahasiswa.id,
-                mahasiswa.nim,
-                mahasiswa.email,
-                pm.status
-            ')
-            ->from('mahasiswa')
-            ->join(
-                'program_mahasiswa pm',
-                'pm.id = (SELECT MAX(pm2.id) FROM program_mahasiswa pm2 WHERE pm2.id_mahasiswa = mahasiswa.id)',
-                'left',
-                false
-            )
-            ->where_in('mahasiswa.nim', $nims)
-            ->get();
-
-        if (!$query) {
-            return;
-        }
-
         $mahasiswaCase = new MahasiswaCase();
+        $chunkSize = 50;
 
-        foreach ($query->result() as $row) {
-            $status = strtolower((string) ($row->status ?? ''));
-            if ($status === 'verified') {
-                continue;
-            }
-            if ($status !== '' && $status !== 'unverified') {
-                continue;
-            }
-            if (empty($row->email)) {
-                log_message('error', 'Auto verifikasi mahasiswa gagal: email kosong untuk NIM ' . $row->nim);
+        foreach (array_chunk($nims, $chunkSize) as $nimChunk) {
+            $query = $this->db->select('
+                    mahasiswa.id,
+                    mahasiswa.nim,
+                    mahasiswa.email,
+                    mahasiswa.id_prodi,
+                    pm.status
+                ')
+                ->from('mahasiswa')
+                ->join(
+                    'program_mahasiswa pm',
+                    'pm.id = (SELECT MAX(pm2.id) FROM program_mahasiswa pm2 WHERE pm2.id_mahasiswa = mahasiswa.id)',
+                    'left',
+                    false
+                )
+                ->where_in('mahasiswa.nim', $nimChunk)
+                ->get();
+
+            if (!$query) {
                 continue;
             }
 
-            try {
-                $mahasiswaCase->updateVerificationStatus((int) $row->id, 'verified');
-            } catch (Throwable $e) {
-                log_message(
-                    'error',
-                    'Auto verifikasi mahasiswa gagal untuk NIM ' . $row->nim . ': ' . $e->getMessage()
-                );
+            foreach ($query->result() as $row) {
+                $status = strtolower((string) ($row->status ?? ''));
+                if ($status === 'verified') {
+                    continue;
+                }
+                if ($status !== '' && $status !== 'unverified') {
+                    continue;
+                }
+                $expectedProdiId = $targets[$row->nim] ?? null;
+                if ($expectedProdiId === null) {
+                    log_message('error', 'Auto verifikasi mahasiswa dilewati: prodi tidak ditemukan untuk NIM ' . $row->nim);
+                    continue;
+                }
+                if ((int) $row->id_prodi !== (int) $expectedProdiId) {
+                    log_message(
+                        'error',
+                        'Auto verifikasi mahasiswa dilewati: prodi tidak cocok untuk NIM ' . $row->nim
+                    );
+                    continue;
+                }
+                if (empty($row->email)) {
+                    log_message('error', 'Auto verifikasi mahasiswa gagal: email kosong untuk NIM ' . $row->nim);
+                    continue;
+                }
+
+                try {
+                    $mahasiswaCase->updateVerificationStatus((int) $row->id, 'verified', $sendVerificationEmail);
+                } catch (Throwable $e) {
+                    log_message(
+                        'error',
+                        'Auto verifikasi mahasiswa gagal untuk NIM ' . $row->nim . ': ' . $e->getMessage()
+                    );
+                }
             }
         }
     }

@@ -57,4 +57,9 @@ class Seeder_model extends CI_Model
     {
         return $this->seederCase->kaprodi_seeder();
     }
+
+    public function plotting_seeder()
+    {
+        return $this->seederCase->plotting_seeder();
+    }
 }

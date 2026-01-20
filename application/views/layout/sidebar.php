@@ -301,14 +301,10 @@
 
                 <?php elseif (in_array($role, ['student', 'mahasiswa'], true)): ?>
                     <div class="sb-sidenav-menu-heading">Mahasiswa</div>
-                    <a class="nav-link" href="<?= base_url('mahasiswa/aktivitas') ?>">
-                        <div class="sb-nav-link-icon"><i class="bi bi-calendar-event"></i></div>
-                        Aktivitas
-                    </a>
-                    <a class="nav-link" href="<?= base_url('mahasiswa/tugas') ?>">
-                        <div class="sb-nav-link-icon"><i class="bi bi-list-check"></i></div>
-                        Tugas
-                    </a>
+                    <div class="nav-link text-muted">
+                        <div class="sb-nav-link-icon"><i class="bi bi-info-circle"></i></div>
+                        Menu mahasiswa belum tersedia.
+                    </div>
 
                 <?php else: ?>
                     <div class="sb-sidenav-menu-heading">Unauthorized</div>

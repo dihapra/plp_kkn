@@ -99,7 +99,33 @@ class MahasiswaCase extends BaseCase
         ];
     }
 
-    public function updateVerificationStatus(int $id, string $status): void
+    public function exportVerification(array $filters): array
+    {
+        $rows = $this->MahasiswaRepository->exportVerification($filters);
+        $formatted = [];
+
+        foreach ($rows as $row) {
+            $programLabel = $this->formatProgramLabel($row->kode_program ?? '', $row->nama_program ?? '', $row->tahun_ajaran ?? '');
+            $status = $this->formatVerificationStatus($row->status ?? null);
+
+            $formatted[] = [
+                $row->nama ?? '-',
+                $row->nim ?? '-',
+                $row->email ?? '-',
+                $row->no_hp ?? '-',
+                $row->nama_prodi ?? '-',
+                $row->fakultas ?? '-',
+                $row->nama_sekolah ?? '-',
+                $programLabel,
+                $row->tahun_ajaran ?? '-',
+                $status,
+            ];
+        }
+
+        return $formatted;
+    }
+
+    public function updateVerificationStatus(int $id, string $status, bool $sendEmail = true): void
     {
         if ($id <= 0) {
             throw new \InvalidArgumentException('ID mahasiswa tidak valid.');
@@ -122,7 +148,9 @@ class MahasiswaCase extends BaseCase
         ];
         $this->MahasiswaRepository->update($id, $updatePayload);
         $this->updateProgramMahasiswaVerification($student, $normalizedStatus);
-        $this->sendVerificationEmail($student, $normalizedStatus);
+        if ($sendEmail) {
+            $this->sendVerificationEmail($student, $normalizedStatus);
+        }
     }
 
     public function deleteRegistration(int $id): void
@@ -381,6 +409,42 @@ class MahasiswaCase extends BaseCase
         }
 
         return $formatter;
+    }
+
+    private function formatProgramLabel(string $kodeProgram, string $namaProgram, string $tahunAjaran): string
+    {
+        $label = '';
+        if ($kodeProgram !== '') {
+            $label = strtoupper($kodeProgram);
+        } elseif ($namaProgram !== '') {
+            $label = $namaProgram;
+        }
+
+        if ($label === '') {
+            return '-';
+        }
+
+        if ($tahunAjaran !== '') {
+            return $label . ' (' . $tahunAjaran . ')';
+        }
+
+        return $label;
+    }
+
+    private function formatVerificationStatus(?string $status): string
+    {
+        $normalized = strtolower((string) $status);
+        if ($normalized === '' || $normalized === 'unverified') {
+            return 'Unverified';
+        }
+        if ($normalized === 'verified') {
+            return 'Verified';
+        }
+        if ($normalized === 'rejected') {
+            return 'Rejected';
+        }
+
+        return ucfirst($normalized);
     }
 
     private function normalizeAndValidate(array $input): array

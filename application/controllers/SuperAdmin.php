@@ -83,8 +83,14 @@ class Superadmin extends MY_Controller
 
     public function dashboard()
     {
+        $rawFilters = $this->input->get(null, true) ?? [];
+        $filters = [
+            'program_code' => $rawFilters['program_code'] ?? '',
+            'tahun_ajaran' => $rawFilters['tahun_ajaran'] ?? '',
+            'has_filter' => !empty($rawFilters),
+        ];
         $uc = new UtilCase();
-        $viewData = $uc->dashboard_data();
+        $viewData = $uc->dashboard_data($filters);
         $content = $this->load->view('super_admin/dashboard/index', $viewData, true);
         $this->load->view('super_admin/layout/app', [
             'title' => 'Super Admin Dashboard',

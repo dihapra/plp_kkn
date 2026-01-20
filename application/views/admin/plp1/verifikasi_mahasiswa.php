@@ -119,6 +119,11 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
                         <option value="all" <?= $defaultStatus === 'all' ? 'selected' : '' ?>>Semua Status</option>
                     </select>
                 </div>
+                <div class="col-md-3 d-flex align-items-end justify-content-md-end">
+                    <button type="button" class="btn btn-success btn-sm" id="btnExport">
+                        <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -216,6 +221,7 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
     $(function () {
         const $program = $('#filterProgram');
         const $status = $('#filterStatus');
+        const $btnExport = $('#btnExport');
         const $btnApprove = $('#btnApproveVerification');
         const $btnReject = $('#btnRejectVerification');
         let activeStudent = {
@@ -333,6 +339,22 @@ $defaultProgramId = $programOptions[0]['id'] ?? '';
 
         $program.on('change', reloadTable);
         $status.on('change', reloadTable);
+        $btnExport.on('click', function () {
+            const params = new URLSearchParams();
+            if ($program.val()) {
+                params.append('program_id', $program.val());
+            }
+            if ($status.val()) {
+                params.append('verification_status', $status.val());
+            }
+            const searchValue = table.search();
+            if (searchValue) {
+                params.append('search', searchValue);
+            }
+            const query = params.toString();
+            const url = `${baseUrl}admin/plp1/verifikasi/mahasiswa/export${query ? '?' + query : ''}`;
+            window.location.href = url;
+        });
 
         const verificationModalEl = document.getElementById('verificationModal');
         const verificationModal = verificationModalEl ? new bootstrap.Modal(verificationModalEl) : null;

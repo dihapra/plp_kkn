@@ -22,6 +22,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body py-2">
+                            <p class="text-muted small mb-1">Dosen belum memenuhi kuota (≤ 8)</p>
+                            <h6 class="mb-0" id="underQuotaDosenCount">0</h6>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="d-flex flex-wrap gap-2 mb-3 pt-4">
                 <button class="btn btn-primary btn-sm" id="btnOpenModal">
@@ -58,14 +66,14 @@
                 <div class="modal-body">
                     <input type="hidden" id="plottingRowIndex" value="-1">
                     <input type="hidden" id="plottingCurrentDosenId" value="">
+                    <input type="hidden" id="plottingCurrentSchoolId" value="">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Dosen Pembimbing</label>
                             <select class="form-select" id="modalDosen" required>
                                 <option value="">Pilih dosen...</option>
                             </select>
-                            <small class="text-muted d-block mt-1" id="modalDosenInfo">Kuota dosen akan tampil di
-                                sini.</small>
+                            <small class="text-muted d-block mt-1" id="modalDosenInfo"></small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Sekolah Mitra</label>
@@ -79,7 +87,7 @@
                             <label class="form-label">Daftar Mahasiswa</label>
                             <select class="form-select" id="modalStudents" multiple size="6" required>
                             </select>
-                            <small class="text-muted d-block mt-1">Pilih minimal 5 dan maksimal 13 mahasiswa sesuai prodi.</small>
+                            <small class="text-muted d-block mt-1">Per sekolah 5-13 mahasiswa, total per DPL 10-13 mahasiswa (maks 2 sekolah).</small>
                         </div>
                     </div>
                 </div>
@@ -94,8 +102,35 @@
     </div>
 </div>
 
+<div class="modal fade" id="plottingRulesModal" tabindex="-1" aria-labelledby="plottingRulesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="plottingRulesModalLabel">Peraturan Plotting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ol class="mb-0 ps-3">
+                    <li>Setiap sekolah mitra menampung mahasiswa dengan jumlah minimal 5 orang dan maksimal 13 orang.</li>
+                    <li>Setiap Dosen Pembimbing Lapangan (DPL) membimbing mahasiswa dengan jumlah total minimal 10 orang dan maksimal 13 orang.</li>
+                    <li>Setiap DPL dapat ditugaskan untuk membimbing paling banyak 2 (dua) sekolah.</li>
+                    <li>Setiap sekolah mitra hanya dapat memiliki 1 (satu) DPL untuk program studi yang bersangkutan.</li>
+                    <li>Apabila jumlah total mahasiswa yang dibimbing oleh seorang DPL melebihi 8 orang, maka jumlah tersebut wajib disesuaikan hingga mencapai minimal 10 mahasiswa.</li>
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     $(function () {
+        const MAX_STUDENTS = 13;
+        const MIN_STUDENTS_PER_SCHOOL = 5;
+        const MIN_STUDENTS_PER_DOSEN = 10;
+        const MAX_SCHOOLS_PER_DOSEN = 2;
         let dosenList = [];
         let schoolList = [];
         let studentList = [];
@@ -214,6 +249,14 @@
             if (hasCounts) {
                 $('#unassignedDosenCount').text(Number(counts.unassigned_dosen) || 0);
                 $('#unassignedStudentCount').text(Number(counts.unassigned_mahasiswa) || 0);
+                const dosenTotals = getDosenStudentTotals();
+                let underQuota = 0;
+                dosenTotals.forEach(function (total) {
+                    if (total > 0 && total <= 8) {
+                        underQuota++;
+                    }
+                });
+                $('#underQuotaDosenCount').text(underQuota);
                 return;
             }
 
@@ -236,6 +279,14 @@
 
             $('#unassignedDosenCount').text(unassignedDosen);
             $('#unassignedStudentCount').text(unassignedStudents);
+            const dosenTotals = getDosenStudentTotals();
+            let underQuota = 0;
+            dosenTotals.forEach(function (total) {
+                if (total > 0 && total <= 8) {
+                    underQuota++;
+                }
+            });
+            $('#underQuotaDosenCount').text(underQuota);
         }
 
         function buildOptions($select, items, placeholder) {
@@ -256,6 +307,50 @@
             return new Set(plottingRows.map(function (row) { return row.dosen_id; }));
         }
 
+        function getDosenSchoolCounts() {
+            const counts = new Map();
+            plottingRows.forEach(function (row) {
+                const current = counts.get(row.dosen_id) || 0;
+                counts.set(row.dosen_id, current + 1);
+            });
+            return counts;
+        }
+
+        function getDosenStudentTotals() {
+            const totals = new Map();
+            plottingRows.forEach(function (row) {
+                const current = totals.get(row.dosen_id) || 0;
+                totals.set(row.dosen_id, current + (row.student_ids || []).length);
+            });
+            return totals;
+        }
+
+        function getDosenStudentCount(dosenId, excludeIndex) {
+            let total = 0;
+            plottingRows.forEach(function (row, index) {
+                if (index === excludeIndex) {
+                    return;
+                }
+                if (row.dosen_id === dosenId) {
+                    total += (row.student_ids || []).length;
+                }
+            });
+            return total;
+        }
+
+        function getDosenSchoolIds(dosenId, excludeIndex) {
+            const schools = new Set();
+            plottingRows.forEach(function (row, index) {
+                if (index === excludeIndex) {
+                    return;
+                }
+                if (row.dosen_id === dosenId) {
+                    schools.add(row.school_id);
+                }
+            });
+            return schools;
+        }
+
         function getUsedStudentIds() {
             const ids = new Set();
             plottingRows.forEach(function (row) {
@@ -264,11 +359,45 @@
             return ids;
         }
 
-        function updateDosenOptions(currentDosenId) {
-            const usedDosenIds = getUsedDosenIds();
+        function getUsedStudentIdsExcludingRow(excludeIndex) {
+            const ids = new Set();
+            plottingRows.forEach(function (row, index) {
+                if (index === excludeIndex) {
+                    return;
+                }
+                (row.student_ids || []).forEach(function (id) { ids.add(id); });
+            });
+            return ids;
+        }
+
+        function getRemainingUnassignedCount(prodi, excludeIndex, selectedIds) {
+            const usedIds = getUsedStudentIdsExcludingRow(excludeIndex);
+            (selectedIds || []).forEach(function (id) { usedIds.add(id); });
+            let remaining = 0;
+            studentList.forEach(function (student) {
+                if (prodi && student.prodi !== prodi) {
+                    return;
+                }
+                if (!usedIds.has(student.id)) {
+                    remaining++;
+                }
+            });
+            return remaining;
+        }
+
+        function updateDosenOptions(currentDosenId, currentSchoolId) {
+            const schoolCounts = getDosenSchoolCounts();
             const items = dosenList
                 .filter(function (dosen) {
-                    return !usedDosenIds.has(dosen.id) || dosen.id === currentDosenId;
+                    const usedCount = schoolCounts.get(dosen.id) || 0;
+                    const totalStudents = getDosenStudentCount(dosen.id, -1);
+                    if (dosen.id === currentDosenId) {
+                        return true;
+                    }
+                    if (totalStudents >= MIN_STUDENTS_PER_DOSEN) {
+                        return false;
+                    }
+                    return usedCount < MAX_SCHOOLS_PER_DOSEN;
                 })
                 .map(function (dosen) {
                     return {
@@ -279,13 +408,18 @@
             buildOptions($selectDosen, items, 'Pilih dosen...');
         }
 
-        function updateSchoolOptions() {
-            const items = schoolList.map(function (school) {
-                return {
-                    value: String(school.id),
-                    text: school.nama
-                };
-            });
+        function updateSchoolOptions(currentSchoolId) {
+            const usedSchoolIds = new Set(plottingRows.map(function (row) { return row.school_id; }));
+            const items = schoolList
+                .filter(function (school) {
+                    return !usedSchoolIds.has(school.id) || school.id === currentSchoolId;
+                })
+                .map(function (school) {
+                    return {
+                        value: String(school.id),
+                        text: school.nama
+                    };
+                });
             buildOptions($selectSchool, items, 'Pilih sekolah...');
         }
 
@@ -326,9 +460,9 @@
             $selectStudents.trigger('change.select2');
 
             if (dosen) {
-                $('#modalDosenInfo').text(dosen.nama + ' -> Kuota ' + dosen.kuota.terisi + '/' + dosen.kuota.total);
+                $('#modalDosenInfo').text('');
             } else {
-                $('#modalDosenInfo').text('Kuota dosen akan tampil di sini.');
+                $('#modalDosenInfo').text('');
             }
         }
 
@@ -344,6 +478,7 @@
         function openModal(index) {
             $('#plottingRowIndex').val(index);
             $('#plottingCurrentDosenId').val('');
+            $('#plottingCurrentSchoolId').val('');
             $('#plottingForm')[0].reset();
 
             let selectedStudents = [];
@@ -356,10 +491,11 @@
                 currentSchoolId = row.school_id;
                 selectedStudents = row.student_ids || [];
                 $('#plottingCurrentDosenId').val(currentDosenId);
+                $('#plottingCurrentSchoolId').val(currentSchoolId);
             }
 
-            updateDosenOptions(currentDosenId);
-            updateSchoolOptions();
+            updateDosenOptions(currentDosenId, currentSchoolId);
+            updateSchoolOptions(currentSchoolId);
             updateStudentOptions(currentDosenId, selectedStudents);
 
             $selectDosen.val(currentDosenId ? String(currentDosenId) : '').trigger('change');
@@ -390,6 +526,25 @@
             updateSchoolInfo(value ? Number(value) : null);
         });
 
+        $selectStudents.on('select2:select', function (e) {
+            const selectedIds = $selectStudents.val() || [];
+            if (selectedIds.length <= MAX_STUDENTS) {
+                return;
+            }
+
+            const selectedId = e?.params?.data?.id;
+            if (selectedId) {
+                const filtered = selectedIds.filter(function (id) { return id !== selectedId; });
+                $selectStudents.val(filtered).trigger('change.select2');
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Mahasiswa terlalu banyak',
+                text: 'Plotting maksimal ' + MAX_STUDENTS + ' mahasiswa.'
+            });
+        });
+
         $('#plottingForm').on('submit', function (e) {
             e.preventDefault();
             const dosenVal = $selectDosen.val();
@@ -405,7 +560,7 @@
                 });
                 return;
             }
-            if (studentIds.length < 5) {
+            if (studentIds.length < MIN_STUDENTS_PER_SCHOOL) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Mahasiswa kurang',
@@ -413,22 +568,99 @@
                 });
                 return;
             }
-            if (studentIds.length > 13) {
+            if (studentIds.length > MAX_STUDENTS) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Mahasiswa terlalu banyak',
-                    text: 'Plotting maksimal 13 mahasiswa.'
+                    text: 'Plotting maksimal ' + MAX_STUDENTS + ' mahasiswa.'
+                });
+                return;
+            }
+            const rowIndex = Number($('#plottingRowIndex').val() || -1);
+            const existingCount = getDosenStudentCount(dosenId, rowIndex);
+            const totalForDosen = existingCount + studentIds.length;
+            if (existingCount >= MIN_STUDENTS_PER_DOSEN && dosenId !== Number($('#plottingCurrentDosenId').val() || 0)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'DPL sudah penuh',
+                    text: 'DPL sudah memenuhi kuota 10-13 mahasiswa.'
+                });
+                return;
+            }
+            if (totalForDosen > MAX_STUDENTS) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Mahasiswa terlalu banyak',
+                    text: 'Total mahasiswa untuk DPL maksimal ' + MAX_STUDENTS + ' mahasiswa.'
+                });
+                return;
+            }
+            const schoolsForDosen = getDosenSchoolIds(dosenId, rowIndex);
+            schoolsForDosen.add(schoolId);
+            if (schoolsForDosen.size > MAX_SCHOOLS_PER_DOSEN) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sekolah terlalu banyak',
+                    text: 'DPL hanya boleh membimbing maksimal ' + MAX_SCHOOLS_PER_DOSEN + ' sekolah.'
+                });
+                return;
+            }
+            if (totalForDosen > 8 && totalForDosen < MIN_STUDENTS_PER_DOSEN) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Mahasiswa kurang',
+                    text: 'Jika lebih dari 8, total mahasiswa untuk DPL minimal ' + MIN_STUDENTS_PER_DOSEN + ' mahasiswa.'
+                });
+                return;
+            }
+            if (totalForDosen < MIN_STUDENTS_PER_DOSEN && schoolsForDosen.size >= MAX_SCHOOLS_PER_DOSEN) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Mahasiswa kurang',
+                    text: 'Total mahasiswa untuk DPL minimal ' + MIN_STUDENTS_PER_DOSEN + ' mahasiswa.'
                 });
                 return;
             }
             const currentDosenId = $('#plottingCurrentDosenId').val();
-
-            savePlotting({
+            const currentSchoolId = $('#plottingCurrentSchoolId').val();
+            const savePayload = {
                 dosen_id: dosenId,
                 school_id: schoolId,
                 student_ids: studentIds,
-                current_dosen_id: currentDosenId
+                current_dosen_id: currentDosenId,
+                current_school_id: currentSchoolId
+            };
+            const dosenRow = dosenList.find(function (d) { return d.id === dosenId; }) || null;
+            const dosenProdi = dosenRow ? dosenRow.prodi : null;
+            const usedSchoolIds = new Set();
+            plottingRows.forEach(function (row, index) {
+                if (index === rowIndex) {
+                    return;
+                }
+                usedSchoolIds.add(row.school_id);
             });
+            const remainingSchools = schoolList
+                .filter(function (school) { return !usedSchoolIds.has(school.id); })
+                .map(function (school) { return school.id; });
+            const isLastSchool = remainingSchools.length === 1 && remainingSchools[0] === schoolId;
+            const remainingStudents = getRemainingUnassignedCount(dosenProdi, rowIndex, studentIds);
+            if (isLastSchool && remainingStudents > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Masih ada mahasiswa tersisa',
+                    text: 'Sekolah terakhir dipakai, masih ada ' + remainingStudents + ' mahasiswa belum terplotting.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Lanjutkan',
+                    cancelButtonText: 'Batal'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        savePlotting(savePayload);
+                    }
+                });
+                return;
+            }
+
+            savePlotting(savePayload);
         });
 
         $('#kaprodiPlottingTable').on('click', '.action-edit', function (e) {
@@ -456,7 +688,7 @@
                 if (!result.isConfirmed) {
                     return;
                 }
-                deletePlotting(row.dosen_id);
+                deletePlotting(row.dosen_id, row.school_id);
             });
         });
 
@@ -515,6 +747,9 @@
                 if (payload.current_dosen_id) {
                     formData.append('current_dosen_id', payload.current_dosen_id);
                 }
+                if (payload.current_school_id) {
+                    formData.append('current_school_id', payload.current_school_id);
+                }
 
                 const response = await fetch(`${baseUrl}kaprodi/plotting/store`, {
                     method: 'POST',
@@ -548,10 +783,11 @@
             }
         }
 
-        async function deletePlotting(dosenId) {
+        async function deletePlotting(dosenId, schoolId) {
             try {
                 const formData = new FormData();
                 formData.append('dosen_id', dosenId);
+                formData.append('school_id', schoolId);
 
                 const response = await fetch(`${baseUrl}kaprodi/plotting/delete`, {
                     method: 'POST',
@@ -578,6 +814,12 @@
                     text: error.message || 'Terjadi kesalahan.'
                 });
             }
+        }
+
+        const rulesModalEl = document.getElementById('plottingRulesModal');
+        if (rulesModalEl && window.bootstrap && bootstrap.Modal) {
+            const rulesModal = new bootstrap.Modal(rulesModalEl, { backdrop: 'static' });
+            rulesModal.show();
         }
 
         loadPlottingData();

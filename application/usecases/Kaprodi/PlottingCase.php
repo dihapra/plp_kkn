@@ -39,7 +39,7 @@ class PlottingCase extends BaseCase
         ];
     }
 
-    public function savePlotting(int $dosenId, int $sekolahId, array $studentIds, ?int $currentDosenId = null): void
+    public function savePlotting(int $dosenId, int $sekolahId, array $studentIds, ?int $currentDosenId = null, ?int $currentSchoolId = null): void
     {
         if ($dosenId <= 0 || $sekolahId <= 0 || empty($studentIds)) {
             throw new \InvalidArgumentException('Dosen, sekolah, dan mahasiswa wajib dipilih.');
@@ -59,6 +59,90 @@ class PlottingCase extends BaseCase
         }
 
         $studentIds = array_values(array_unique(array_map('intval', $studentIds)));
+        $studentCount = count($studentIds);
+        if ($studentCount < 5) {
+            throw new \InvalidArgumentException('Minimal 5 mahasiswa wajib dipilih untuk plotting.');
+        }
+        if ($studentCount > 13) {
+            throw new \InvalidArgumentException('Maksimal 13 mahasiswa dapat dipilih untuk plotting.');
+        }
+
+        $currentDosenId = $currentDosenId && $currentDosenId > 0 ? $currentDosenId : null;
+        $currentSchoolId = $currentSchoolId && $currentSchoolId > 0 ? $currentSchoolId : null;
+        if ($currentDosenId && !$currentSchoolId) {
+            throw new \InvalidArgumentException('Sekolah lama wajib dikirim saat mengubah plotting.');
+        }
+        $schoolQuery = $this->CI->db
+            ->distinct()
+            ->select('pm.id_sekolah')
+            ->from('program_mahasiswa pm')
+            ->where('pm.id_program', $programId)
+            ->where('pm.id_dosen', $dosenId)
+            ->where('pm.id_sekolah IS NOT NULL', null, false);
+
+        if ($currentDosenId && $currentSchoolId && $currentDosenId === $dosenId) {
+            $schoolQuery->where('pm.id_sekolah !=', $currentSchoolId);
+        }
+
+        $existingSchools = $schoolQuery->get()->result();
+        $existingSchoolIds = array_map(function ($row) {
+            return (int) $row->id_sekolah;
+        }, $existingSchools);
+
+        if (in_array($sekolahId, $existingSchoolIds, true)) {
+            throw new \InvalidArgumentException('Dosen sudah terplotting pada sekolah ini. Gunakan edit plotting.');
+        }
+
+        $totalSchools = count($existingSchoolIds) + 1;
+        if ($totalSchools > 2) {
+            throw new \InvalidArgumentException('Dosen hanya boleh membimbing maksimal 2 sekolah.');
+        }
+
+        $existingCountQuery = $this->CI->db
+            ->from('program_mahasiswa pm')
+            ->where('pm.id_program', $programId)
+            ->where('pm.id_dosen', $dosenId)
+            ->where('pm.id_sekolah IS NOT NULL', null, false);
+
+        if ($currentDosenId && $currentSchoolId && $currentDosenId === $dosenId) {
+            $existingCountQuery->where('pm.id_sekolah !=', $currentSchoolId);
+        }
+
+        $existingCount = (int) $existingCountQuery->count_all_results();
+        $totalForDosen = $existingCount + $studentCount;
+        if ($existingCount >= 10) {
+            throw new \InvalidArgumentException('DPL sudah memenuhi kuota 10-13 mahasiswa.');
+        }
+        if ($totalForDosen > 8 && $totalForDosen < 10) {
+            throw new \InvalidArgumentException('Jika lebih dari 8, total mahasiswa untuk DPL minimal 10 mahasiswa.');
+        }
+        if ($totalForDosen < 10 && $totalSchools >= 2) {
+            throw new \InvalidArgumentException('Total mahasiswa untuk DPL minimal 10 mahasiswa.');
+        }
+        if ($totalForDosen > 13) {
+            throw new \InvalidArgumentException('Total mahasiswa untuk DPL maksimal 13 mahasiswa.');
+        }
+
+        $schoolAssignedQuery = $this->CI->db
+            ->select('pm.id_dosen')
+            ->from('program_mahasiswa pm')
+            ->join('mahasiswa', 'mahasiswa.id = pm.id_mahasiswa', 'inner')
+            ->where('pm.id_program', $programId)
+            ->where('pm.id_sekolah', $sekolahId)
+            ->where('pm.id_dosen IS NOT NULL', null, false);
+
+        if (!empty($allowedProdiIds)) {
+            $schoolAssignedQuery->where_in('mahasiswa.id_prodi', $allowedProdiIds);
+        }
+        if ($currentDosenId && $currentSchoolId && $currentDosenId === $dosenId && $currentSchoolId === $sekolahId) {
+            $schoolAssignedQuery->where('NOT (pm.id_dosen = ' . (int) $currentDosenId . ' AND pm.id_sekolah = ' . (int) $currentSchoolId . ')', null, false);
+        }
+
+        $schoolAssigned = $schoolAssignedQuery->limit(1)->get()->row();
+        if ($schoolAssigned) {
+            throw new \InvalidArgumentException('Sekolah sudah memiliki DPL untuk prodi ini.');
+        }
+
         $studentRows = $this->CI->db
             ->select('pm.id_mahasiswa, mahasiswa.id_prodi, pm.id_dosen')
             ->from('program_mahasiswa pm')
@@ -80,54 +164,41 @@ class PlottingCase extends BaseCase
             }
         }
 
-        $currentDosenId = $currentDosenId && $currentDosenId > 0 ? $currentDosenId : null;
-
         $alreadyAssigned = $this->CI->db
-            ->select('id_mahasiswa, id_dosen')
+            ->select('id_mahasiswa, id_dosen, id_sekolah')
             ->from('program_mahasiswa')
             ->where('id_program', $programId)
             ->where_in('id_mahasiswa', $studentIds)
             ->where('id_dosen IS NOT NULL', null, false)
+            ->where('id_sekolah IS NOT NULL', null, false)
             ->get()
             ->result();
 
         foreach ($alreadyAssigned as $row) {
             $existingDosen = (int) $row->id_dosen;
-            if ($currentDosenId && $existingDosen === $currentDosenId) {
+            $existingSchool = (int) $row->id_sekolah;
+            if ($currentDosenId && $currentSchoolId && $existingDosen === $currentDosenId && $existingSchool === $currentSchoolId) {
                 continue;
             }
-            if ($existingDosen !== $dosenId) {
+            if ($existingDosen !== $dosenId || $existingSchool !== $sekolahId) {
                 throw new \InvalidArgumentException('Mahasiswa yang dipilih sudah terplotting.');
-            }
-        }
-
-        if (!$currentDosenId || $currentDosenId !== $dosenId) {
-            $existingForDosen = $this->CI->db
-                ->select('id')
-                ->from('program_mahasiswa')
-                ->where('id_program', $programId)
-                ->where('id_dosen', $dosenId)
-                ->limit(1)
-                ->get()
-                ->row();
-            if ($existingForDosen) {
-                throw new \InvalidArgumentException('Dosen sudah terplotting. Pilih dosen lain.');
             }
         }
 
         $this->CI->db->trans_begin();
 
         try {
-            if ($currentDosenId) {
+            if ($currentDosenId && $currentSchoolId) {
                 $this->CI->db
                     ->where('id_program', $programId)
                     ->where('id_dosen', $currentDosenId)
+                    ->where('id_sekolah', $currentSchoolId)
                     ->update('program_mahasiswa', [
                         'id_dosen' => null,
                         'id_sekolah' => null,
                         'updated_at' => date('Y-m-d H:i:s'),
                     ]);
-                $this->removeKelompokForDosen($programId, $currentDosenId);
+                $this->removeKelompokForDosenSchool($programId, $currentDosenId, $currentSchoolId);
             }
 
             $this->CI->db
@@ -152,10 +223,10 @@ class PlottingCase extends BaseCase
         }
     }
 
-    public function deletePlotting(int $dosenId): void
+    public function deletePlotting(int $dosenId, int $sekolahId): void
     {
-        if ($dosenId <= 0) {
-            throw new \InvalidArgumentException('ID dosen tidak valid.');
+        if ($dosenId <= 0 || $sekolahId <= 0) {
+            throw new \InvalidArgumentException('ID dosen atau sekolah tidak valid.');
         }
 
         $program = $this->getActiveProgram();
@@ -164,13 +235,14 @@ class PlottingCase extends BaseCase
         $this->CI->db
             ->where('id_program', $programId)
             ->where('id_dosen', $dosenId)
+            ->where('id_sekolah', $sekolahId)
             ->update('program_mahasiswa', [
                 'id_dosen' => null,
                 'id_sekolah' => null,
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
 
-        $this->removeKelompokForDosen($programId, $dosenId);
+        $this->removeKelompokForDosenSchool($programId, $dosenId, $sekolahId);
     }
 
     private function syncKelompokForPlotting(int $programId, int $dosenId, int $sekolahId, array $studentIds): void
@@ -197,7 +269,7 @@ class PlottingCase extends BaseCase
             return;
         }
 
-        $this->removeKelompokByProgramDosenId($programId, (int) $programDosen->id);
+        $this->removeKelompokByProgramDosenSekolah($programId, (int) $programDosen->id, (int) $programSekolah->id);
 
         $existingCount = (int) $this->CI->db
             ->from('program_kelompok')
@@ -267,7 +339,7 @@ class PlottingCase extends BaseCase
         $this->CI->db->insert_batch('program_kelompok_anggota', $anggotaRows);
     }
 
-    private function removeKelompokForDosen(int $programId, int $dosenId): void
+    private function removeKelompokForDosenSchool(int $programId, int $dosenId, int $sekolahId): void
     {
         $programDosen = $this->CI->db
             ->select('id')
@@ -278,20 +350,30 @@ class PlottingCase extends BaseCase
             ->get()
             ->row();
 
-        if (!$programDosen) {
+        $programSekolah = $this->CI->db
+            ->select('id')
+            ->from('program_sekolah')
+            ->where('id_program', $programId)
+            ->where('id_sekolah', $sekolahId)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$programDosen || !$programSekolah) {
             return;
         }
 
-        $this->removeKelompokByProgramDosenId($programId, (int) $programDosen->id);
+        $this->removeKelompokByProgramDosenSekolah($programId, (int) $programDosen->id, (int) $programSekolah->id);
     }
 
-    private function removeKelompokByProgramDosenId(int $programId, int $programDosenId): void
+    private function removeKelompokByProgramDosenSekolah(int $programId, int $programDosenId, int $programSekolahId): void
     {
         $kelompokRows = $this->CI->db
             ->select('id')
             ->from('program_kelompok')
             ->where('id_program', $programId)
             ->where('id_program_dosen', $programDosenId)
+            ->where('id_program_sekolah', $programSekolahId)
             ->get()
             ->result();
 
@@ -487,6 +569,7 @@ class PlottingCase extends BaseCase
             ->join('mahasiswa', 'mahasiswa.id = pm.id_mahasiswa', 'inner')
             ->join('prodi', 'prodi.id = mahasiswa.id_prodi', 'left')
             ->where('pm.id_program', $programId)
+            ->where('pm.status', 'verified')
             ->order_by('mahasiswa.nama', 'ASC');
 
         if (!empty($allowedProdiIds)) {

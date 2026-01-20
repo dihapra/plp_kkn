@@ -556,19 +556,22 @@ class Kaprodi extends MY_Controller
             $studentIds = array_values(array_filter((array) $studentIds, function ($id) {
                 return $id !== null && $id !== '';
             }));
+            $maxStudents = 13;
             if (count($studentIds) < 5) {
                 response_error('Minimal 5 mahasiswa wajib dipilih untuk plotting.', null, 422);
                 return;
             }
-            if (count($studentIds) > 13) {
-                response_error('Maksimal 13 mahasiswa dapat dipilih untuk plotting.', null, 422);
+            if (count($studentIds) > $maxStudents) {
+                response_error('Maksimal ' . $maxStudents . ' mahasiswa dapat dipilih untuk plotting.', null, 422);
                 return;
             }
             $currentDosenId = $this->input->post('current_dosen_id');
             $currentDosenId = $currentDosenId !== null && $currentDosenId !== '' ? (int) $currentDosenId : null;
+            $currentSchoolId = $this->input->post('current_school_id');
+            $currentSchoolId = $currentSchoolId !== null && $currentSchoolId !== '' ? (int) $currentSchoolId : null;
 
             $uc = new PlottingCase();
-            $uc->savePlotting($dosenId, $schoolId, (array) $studentIds, $currentDosenId);
+            $uc->savePlotting($dosenId, $schoolId, (array) $studentIds, $currentDosenId, $currentSchoolId);
             response_json('Plotting berhasil disimpan.');
         } catch (\Throwable $th) {
             response_error($th->getMessage(), $th, 422);
@@ -584,8 +587,9 @@ class Kaprodi extends MY_Controller
 
         try {
             $dosenId = (int) $this->input->post('dosen_id');
+            $schoolId = (int) $this->input->post('school_id');
             $uc = new PlottingCase();
-            $uc->deletePlotting($dosenId);
+            $uc->deletePlotting($dosenId, $schoolId);
             response_json('Plotting berhasil dihapus.');
         } catch (\Throwable $th) {
             response_error($th->getMessage(), $th, 422);

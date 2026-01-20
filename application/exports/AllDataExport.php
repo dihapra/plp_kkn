@@ -61,7 +61,7 @@ class AllDataExport
         // Siapkan writer untuk format XLSX
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $filename = 'all_data_export_' . date('YmdHis') . '.xlsx';
-
+        
         // Set header untuk download file Excel
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $filename . '"');

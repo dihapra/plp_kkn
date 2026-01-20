@@ -15,6 +15,7 @@ class Plp1 extends Modulebaseadmin
 {
     protected $moduleLabel = 'PLP I';
     protected $moduleSlug  = 'plp';
+    protected $exclude_methods = ['verifikasi_mahasiswa_export'];
     protected $pageDescriptions = [
         'master_data'         => 'Master data PLP I berisi relasi mahasiswa dengan dosen pembimbing, guru pamong, dan sekolah mitra aktif.',
         'activities'          => 'Pantau seluruh aktivitas mahasiswa PLP I dari tahap briefing hingga monitoring lapangan.',
@@ -32,6 +33,7 @@ class Plp1 extends Modulebaseadmin
 
     public function index()
     {
+        // dd(true);
         $data = $this->buildDashboardData('activities', 'Kegiatan');
         view_with_layout('admin/plp1/index', 'Admin PLP I - Dashboard', 'admin_plp1', $data);
     }
@@ -366,6 +368,53 @@ class Plp1 extends Modulebaseadmin
             $data['count_filtered'],
             $data['formatted']
         );
+    }
+
+    public function verifikasi_mahasiswa_export()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        $programId = (int) ($this->input->get('program_id') ?? 0);
+        $status = $this->input->get('verification_status', true);
+        $search = trim((string) $this->input->get('search', true));
+
+        $filters = [
+            'filter_program_type' => 'plp1',
+            'filter_status' => $status !== '' ? $status : 'unverified',
+        ];
+
+        if ($programId > 0) {
+            $filters['filter_program'] = $programId;
+        }
+
+        if ($search !== '') {
+            $filters['search'] = $search;
+        }
+
+        $uc = new MahasiswaCase();
+        $rows = $uc->exportVerification($filters);
+        if ($this->input->get('empty', true) === '1') {
+            $rows = [];
+        }
+
+        $columns = [
+            'Nama',
+            'NIM',
+            'Email',
+            'No HP',
+            'Program Studi',
+            'Fakultas',
+            'Sekolah',
+            'Program',
+            'Tahun Ajaran',
+            'Status',
+        ];
+
+        $filename = 'verifikasi_mahasiswa_plp1_' . date('Ymd');
+        exportMahasiswaPendaftar::export($filename, $columns, $rows);
     }
 
     public function verifikasi_mahasiswa_detail($id)

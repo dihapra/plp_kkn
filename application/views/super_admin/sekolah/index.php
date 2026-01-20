@@ -4,10 +4,6 @@
             <h3 class="mb-1">Daftar Sekolah</h3>
             <p class="mb-0 text-muted">Kelola daftar sekolah yang terdaftar dalam sistem.</p>
         </div>
-        <button type="button" class="btn btn-primary" id="btnAddSchool">
-            <i class="bi bi-plus-lg me-1"></i>
-            Tambah Sekolah
-        </button>
     </div>
 
     <div class="card">
@@ -105,10 +101,6 @@
             $('#schoolSubmitBtn').text('Simpan Perubahan');
             schoolModal.show();
         }
-
-        $('#btnAddSchool').on('click', function () {
-            openCreateModal();
-        });
 
         $('#dataTable').on('click', '.action-edit', function (e) {
             e.preventDefault();

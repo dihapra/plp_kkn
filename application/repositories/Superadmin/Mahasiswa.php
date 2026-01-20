@@ -113,6 +113,73 @@ class Mahasiswa
         ];
     }
 
+    public function exportVerification(array $params): array
+    {
+        $this->db->select('
+            mahasiswa.nama,
+            mahasiswa.nim,
+            mahasiswa.email,
+            mahasiswa.no_hp,
+            prodi.nama AS nama_prodi,
+            prodi.fakultas AS fakultas,
+            sekolah.nama AS nama_sekolah,
+            pm.status AS status,
+            program.nama AS nama_program,
+            program.kode AS kode_program,
+            program.tahun_ajaran
+        ');
+        $this->db->from('mahasiswa');
+        $this->db->join('prodi', 'prodi.id = mahasiswa.id_prodi', 'left');
+        $this->db->join(
+            'program_mahasiswa pm',
+            'pm.id = (SELECT MAX(pm2.id) FROM program_mahasiswa pm2 WHERE pm2.id_mahasiswa = mahasiswa.id)',
+            'left',
+            false
+        );
+        $this->db->join('sekolah', 'sekolah.id = pm.id_sekolah', 'left');
+        $this->db->join('program', 'program.id = pm.id_program', 'left');
+
+        if (!empty($params['filter_program_type'])) {
+            $this->db->where('program.kode', $params['filter_program_type']);
+        }
+
+        if (!empty($params['filter_program'])) {
+            $this->db->where('pm.id_program', (int) $params['filter_program']);
+        }
+
+        if (!empty($params['filter_status']) && $params['filter_status'] !== 'all') {
+            $status = $params['filter_status'];
+            if ($status === 'unverified') {
+                $this->db->where(
+                    '(pm.status IS NULL OR pm.status = ' . $this->db->escape($status) . ')',
+                    null,
+                    false
+                );
+            } else {
+                $this->db->where('pm.status', $status);
+            }
+        }
+
+        if (!empty($params['search'])) {
+            $search_columns = [
+                'mahasiswa.nama',
+                'mahasiswa.nim',
+                'mahasiswa.email',
+                'prodi.nama',
+                'prodi.fakultas',
+                'sekolah.nama',
+                'program.nama',
+                'program.kode',
+                'program.tahun_ajaran',
+            ];
+            $this->applySearch($params['search'], $search_columns);
+        }
+
+        $this->db->order_by('mahasiswa.nama', 'asc');
+
+        return $this->db->get()->result();
+    }
+
     public function datatableMasterData(array $params): array
     {
         $this->db->select('

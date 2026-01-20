@@ -99,7 +99,8 @@ class ModuleMasterDataCase extends BaseCase
 
     private function sortRows(array $rows, string $key, string $direction): array
     {
-        if (empty($rows) || !array_key_exists($key, $rows[0])) {
+        $firstRow = $rows ? reset($rows) : null;
+        if (!$firstRow || !array_key_exists($key, $firstRow)) {
             return $rows;
         }
 

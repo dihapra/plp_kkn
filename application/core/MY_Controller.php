@@ -100,10 +100,10 @@ class MY_Controller extends CI_Controller
         $programId = $this->session->userdata($this->programSessionKey)
             ?? $this->session->userdata('id_program');
 
-        if (empty($programId)) {
-            redirect($this->programRedirectRoute);
-            exit;
-        }
+        // if (empty($programId)) {
+        //     redirect($this->programRedirectRoute);
+        //     exit;
+        // }
         if(!empty($programId) &&$this->session->userdata($this->programSessionKey)  != $programId){
             redirect("/dashboard");
         }
