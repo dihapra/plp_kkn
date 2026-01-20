@@ -355,6 +355,7 @@ class Kaprodi extends MY_Controller
 
         $programSekolahOptions = [];
         $rows = [];
+        $blockedProgramSekolahIds = [];
 
         if ($programId > 0) {
             $programSekolahOptions = $this->db
@@ -367,6 +368,22 @@ class Kaprodi extends MY_Controller
                 ->result_array();
 
             if ($prodiId > 0) {
+                $groupProdiIds = $this->getProdiGroupIds($prodiInfo ? (string) $prodiInfo['nama'] : '');
+                if (!empty($groupProdiIds)) {
+                    $groupProdiIds = array_values(array_diff($groupProdiIds, [$prodiId]));
+                }
+                if (!empty($groupProdiIds)) {
+                    $blockedProgramSekolahIds = $this->db
+                        ->select('psp.id_program_sekolah')
+                        ->from('program_sekolah_prodi psp')
+                        ->join('program_sekolah ps', 'ps.id = psp.id_program_sekolah', 'inner')
+                        ->where('ps.id_program', $programId)
+                        ->where_in('psp.id_prodi', $groupProdiIds)
+                        ->get()
+                        ->result_array();
+                    $blockedProgramSekolahIds = array_map('intval', array_column($blockedProgramSekolahIds, 'id_program_sekolah'));
+                }
+
                 $rows = $this->db
                     ->select('psp.id, psp.surat_mou, psp.status, ps.id AS program_sekolah_id, sekolah.nama AS nama_sekolah')
                     ->from('program_sekolah_prodi psp')
@@ -385,6 +402,7 @@ class Kaprodi extends MY_Controller
             'programSekolahOptions' => $programSekolahOptions,
             'rows' => $rows,
             'prodiInfo' => $prodiInfo,
+            'blockedProgramSekolahIds' => $blockedProgramSekolahIds,
         ];
 
         view_with_layout('kaprodi/sekolah/index', 'Sekolah Kerja Sama', null, $viewData);
@@ -430,12 +448,28 @@ class Kaprodi extends MY_Controller
             return;
         }
 
+        $prodiInfo = $this->db
+            ->select('nama')
+            ->from('prodi')
+            ->where('id', $prodiId)
+            ->limit(1)
+            ->get()
+            ->row_array();
+
         $now = date('Y-m-d H:i:s');
         $userId = (int) $this->session->userdata('id_user');
 
         $this->db->trans_begin();
 
         try {
+            $groupProdiIds = [];
+            if (!empty($prodiInfo) && !empty($prodiInfo['nama'])) {
+                $groupProdiIds = $this->getProdiGroupIds((string) $prodiInfo['nama']);
+                if (!empty($groupProdiIds)) {
+                    $groupProdiIds = array_values(array_diff($groupProdiIds, [$prodiId]));
+                }
+            }
+
             $programSekolahRows = $this->db
                 ->select('id')
                 ->from('program_sekolah')
@@ -449,6 +483,24 @@ class Kaprodi extends MY_Controller
             }
 
             $validIds = array_map('intval', array_column($programSekolahRows, 'id'));
+
+            if (!empty($groupProdiIds)) {
+                $conflictRow = $this->db
+                    ->select('psp.id_program_sekolah')
+                    ->from('program_sekolah_prodi psp')
+                    ->join('program_sekolah ps', 'ps.id = psp.id_program_sekolah', 'inner')
+                    ->where('ps.id_program', $programId)
+                    ->where_in('psp.id_program_sekolah', $validIds)
+                    ->where_in('psp.id_prodi', $groupProdiIds)
+                    ->limit(1)
+                    ->get()
+                    ->row();
+
+                if ($conflictRow) {
+                    throw new \RuntimeException('Sekolah sudah digunakan oleh prodi yang setara. Pilih sekolah lain.');
+                }
+            }
+
             $existingRows = $this->db
                 ->select('id, id_program_sekolah')
                 ->from('program_sekolah_prodi')
@@ -636,5 +688,41 @@ class Kaprodi extends MY_Controller
             ->row_array();
 
         return $row ?: null;
+    }
+
+    private function getProdiGroupIds(string $currentProdiName): array
+    {
+        $current = trim($currentProdiName);
+        if ($current === '') {
+            return [];
+        }
+
+        $groups = [
+            ['Pendidikan Jasmani Kesehatan dan Rekreasi', 'Pendidikan Kepelatihan Olahraga'],
+            ['Pendidikan Tari', 'Pendidikan Seni Rupa', 'Pendidikan Musik'],
+        ];
+
+        $matchedGroup = [];
+        foreach ($groups as $group) {
+            foreach ($group as $name) {
+                if (strcasecmp($name, $current) === 0) {
+                    $matchedGroup = $group;
+                    break 2;
+                }
+            }
+        }
+
+        if (empty($matchedGroup)) {
+            return [];
+        }
+
+        $rows = $this->db
+            ->select('id')
+            ->from('prodi')
+            ->where_in('nama', $matchedGroup)
+            ->get()
+            ->result_array();
+
+        return array_map('intval', array_column($rows, 'id'));
     }
 }

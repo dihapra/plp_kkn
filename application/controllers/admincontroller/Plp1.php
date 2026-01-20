@@ -1006,11 +1006,10 @@ class Plp1 extends Modulebaseadmin
                 'columns'     => [
                     ['data' => 'student_name', 'label' => 'Mahasiswa'],
                     ['data' => 'nim', 'label' => 'NIM'],
-                    ['data' => 'email', 'label' => 'Email'],
-                    ['data' => 'phone', 'label' => 'No HP'],
-                    ['data' => 'program_studi', 'label' => 'Program Studi'],
-                    ['data' => 'fakultas', 'label' => 'Fakultas'],
-                    ['data' => 'status', 'label' => 'Status', 'type' => 'status_badge', 'className' => 'text-center'],
+                    ['data' => 'school_name', 'label' => 'Sekolah'],
+                    ['data' => 'teacher_name', 'label' => 'Guru Pamong'],
+                    ['data' => 'lecturer_name', 'label' => 'DPL'],
+                    ['data' => 'id', 'label' => 'Aksi', 'type' => 'detail_action', 'className' => 'text-end'],
                 ],
             ],
             'guru' => [

@@ -9,8 +9,10 @@ $prodiLabel = $prodiInfo
     : 'Belum ditentukan';
 
 $assignedProgramSekolahIds = array_map('intval', array_column($rows, 'program_sekolah_id'));
-$availableProgramSekolahOptions = array_values(array_filter($programSekolahOptions, function ($option) use ($assignedProgramSekolahIds) {
-    return !in_array((int) $option['id'], $assignedProgramSekolahIds, true);
+$blockedProgramSekolahIds = $blockedProgramSekolahIds ?? [];
+$excludedProgramSekolahIds = array_values(array_unique(array_merge($assignedProgramSekolahIds, $blockedProgramSekolahIds)));
+$availableProgramSekolahOptions = array_values(array_filter($programSekolahOptions, function ($option) use ($excludedProgramSekolahIds) {
+    return !in_array((int) $option['id'], $excludedProgramSekolahIds, true);
 }));
 ?>
 

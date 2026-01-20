@@ -68,6 +68,25 @@ $activeLabel = $hasActiveProgram
     </div>
 </div>
 
+<?php if ($entityKey === 'mahasiswa'): ?>
+    <div class="modal fade" id="studentDetailModal" tabindex="-1" aria-labelledby="studentDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="studentDetailModalLabel">Detail Mahasiswa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="studentDetailList" class="d-grid gap-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 <script>
     $(function () {
         const hasProgram = <?= $hasActiveProgram ? 'true' : 'false' ?>;
@@ -121,6 +140,24 @@ $activeLabel = $hasActiveProgram
                 col.render = function (value) {
                     return renderPaymentBadge(value);
                 };
+            } else if (column.type === 'detail_action') {
+                col.orderable = false;
+                col.render = function (value) {
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item action-detail" href="#" data-id="${value}">
+                                        <i class="bi bi-eye me-2 text-primary"></i>Detail
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                };
             } else {
                 col.render = function (value) {
                     if (value === null || value === undefined || value === '') {
@@ -132,7 +169,7 @@ $activeLabel = $hasActiveProgram
             return col;
         });
 
-        $('#plpMasterDataTable').DataTable({
+        const table = $('#plpMasterDataTable').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -157,5 +194,75 @@ $activeLabel = $hasActiveProgram
             columns: datatableColumns,
             order: [[0, 'asc']]
         });
+
+        function syncSortIcons() {
+            const headers = table.columns().header().toArray();
+            headers.forEach(function (header, index) {
+                const $header = $(header);
+                const config = columnsConfig[index] || {};
+                const orderable = config.orderable !== false && config.type !== 'detail_action';
+                if (!orderable) {
+                    return;
+                }
+                let $icon = $header.find('.sort-indicator');
+                if ($icon.length === 0) {
+                    $icon = $('<i class="bi bi-arrow-down-up sort-indicator ms-1 text-muted"></i>');
+                    $header.append($icon);
+                }
+                $icon.removeClass('bi-arrow-up bi-arrow-down bi-arrow-down-up');
+                if ($header.hasClass('sorting_asc')) {
+                    $icon.addClass('bi-arrow-up');
+                } else if ($header.hasClass('sorting_desc')) {
+                    $icon.addClass('bi-arrow-down');
+                } else {
+                    $icon.addClass('bi-arrow-down-up');
+                }
+            });
+        }
+
+        syncSortIcons();
+        table.on('order.dt', syncSortIcons);
+
+        const isMahasiswa = <?= $entityKey === 'mahasiswa' ? 'true' : 'false' ?>;
+        if (isMahasiswa) {
+            const detailModalEl = document.getElementById('studentDetailModal');
+            const detailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
+            const $detailList = $('#studentDetailList');
+
+            function renderDetailRow(label, value) {
+                const safeValue = value !== null && value !== undefined && value !== '' ? value : '-';
+                return `
+                    <div class="d-flex justify-content-between border-bottom pb-2">
+                        <span class="text-muted">${label}</span>
+                        <span class="fw-semibold text-end">${safeValue}</span>
+                    </div>
+                `;
+            }
+
+            $('#plpMasterDataTable').on('click', '.action-detail', function (e) {
+                e.preventDefault();
+                if (!detailModal) {
+                    return;
+                }
+                const rowData = table.row($(this).closest('tr')).data();
+                if (!rowData) {
+                    return;
+                }
+                const rows = [
+                    renderDetailRow('Nama', rowData.student_name),
+                    renderDetailRow('NIM', rowData.nim),
+                    renderDetailRow('Email', rowData.email),
+                    renderDetailRow('No HP', rowData.phone),
+                    renderDetailRow('Program Studi', rowData.program_studi),
+                    renderDetailRow('Fakultas', rowData.fakultas),
+                    renderDetailRow('Sekolah', rowData.school_name),
+                    renderDetailRow('Guru Pamong', rowData.teacher_name),
+                    renderDetailRow('DPL', rowData.lecturer_name),
+                    renderDetailRow('Status', rowData.status)
+                ];
+                $detailList.html(rows.join(''));
+                detailModal.show();
+            });
+        }
     });
 </script>

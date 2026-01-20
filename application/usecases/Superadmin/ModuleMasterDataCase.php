@@ -16,7 +16,7 @@ class ModuleMasterDataCase extends BaseCase
             'default_order'=> 'lecturer_name',
         ],
         'mahasiswa' => [
-            'searchable'   => ['student_name', 'nim', 'email', 'phone', 'program_studi', 'fakultas', 'status'],
+            'searchable'   => ['student_name', 'nim', 'email', 'phone', 'program_studi', 'fakultas', 'status', 'school_name', 'teacher_name', 'lecturer_name'],
             'default_order'=> 'student_name',
         ],
         'guru' => [
@@ -204,11 +204,17 @@ class ModuleMasterDataCase extends BaseCase
                 mahasiswa.no_hp AS phone,
                 pm.status AS status,
                 prodi.nama AS program_studi,
-                prodi.fakultas
+                prodi.fakultas,
+                sekolah.nama AS school_name,
+                guru.nama AS teacher_name,
+                dosen.nama AS lecturer_name
             ')
             ->from('program_mahasiswa pm')
             ->join('mahasiswa', 'mahasiswa.id = pm.id_mahasiswa', 'inner')
             ->join('prodi', 'prodi.id = mahasiswa.id_prodi', 'left')
+            ->join('sekolah', 'sekolah.id = pm.id_sekolah', 'left')
+            ->join('guru', 'guru.id = pm.id_guru', 'left')
+            ->join('dosen', 'dosen.id = pm.id_dosen', 'left')
             ->where('pm.id_program', $programId)
             ->order_by('mahasiswa.nama', 'ASC')
             ->get()
