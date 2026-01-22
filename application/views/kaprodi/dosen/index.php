@@ -185,8 +185,8 @@ $activeProdiId = $activeProdi->id ?? 0;
                     render: function (id) {
                         return `
                             <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    ...
+                                <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item action-edit" href="#" data-id="${id}">Edit</a></li>
@@ -202,6 +202,8 @@ $activeProdiId = $activeProdi->id ?? 0;
         const modalEl = document.getElementById('kaprodiDosenModal');
         const dosenModal = new bootstrap.Modal(modalEl);
         const insertTabEl = document.getElementById('kaprodiDosenTabInsert');
+        const importTabEl = document.getElementById('kaprodiDosenTabImport');
+        const importTabPaneEl = document.getElementById('kaprodiDosenTabPaneImport');
 
         function resetForm() {
             $('#kaprodiDosenForm')[0].reset();
@@ -216,11 +218,21 @@ $activeProdiId = $activeProdi->id ?? 0;
             tab.show();
         }
 
+        function setImportTabVisible(isVisible) {
+            if (importTabEl) {
+                importTabEl.classList.toggle('d-none', !isVisible);
+            }
+            if (importTabPaneEl) {
+                importTabPaneEl.classList.toggle('d-none', !isVisible);
+            }
+        }
+
         function openCreateModal() {
             resetForm();
             $('#kaprodiDosenImportForm')[0]?.reset();
             $('#kaprodiDosenModalLabel').text('Tambah Dosen');
             $('#kaprodiDosenSubmit').text('Simpan');
+            setImportTabVisible(true);
             showInsertTab();
             dosenModal.show();
         }
@@ -236,6 +248,7 @@ $activeProdiId = $activeProdi->id ?? 0;
             $('#kaprodiDosenModalLabel').text('Edit Dosen');
             $('#kaprodiDosenSubmit').text('Simpan Perubahan');
             $('#kaprodiDosenImportForm')[0]?.reset();
+            setImportTabVisible(false);
             showInsertTab();
             dosenModal.show();
         }

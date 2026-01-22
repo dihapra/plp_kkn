@@ -172,9 +172,11 @@ class ModuleMasterDataCase extends BaseCase
         $rows = $this->CI->db->select('
                 dosen.id,
                 dosen.nama AS lecturer_name,
+                dosen.nidn,
                 dosen.email,
                 dosen.no_hp AS phone,
                 dosen.fakultas,
+                dosen.id_prodi,
                 prodi.nama AS nama_prodi,
                 COUNT(pm.id) AS total_students
             ')

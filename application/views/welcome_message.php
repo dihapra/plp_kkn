@@ -124,6 +124,38 @@ defined('BASEPATH') or exit('No direct script access allowed');
         .btn-login {
             padding: 10px 22px;
         }
+
+        .channel-modal .modal-content {
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+        }
+
+        .channel-modal .modal-body {
+            padding: 28px;
+        }
+
+        .channel-modal .channel-list a {
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--ink);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .channel-modal .channel-list a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+        }
+
+        .channel-modal .channel-list i {
+            font-size: 1.3rem;
+        }
     </style>
 </head>
 
@@ -311,12 +343,51 @@ defined('BASEPATH') or exit('No direct script access allowed');
         <small>&copy; <?= date('Y'); ?> PLP-KKN UNIMED. Seluruh hak cipta dilindungi.</small>
     </footer>
 
+    <div class="modal fade channel-modal" id="channelModal" tabindex="-1" aria-labelledby="channelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="channelModalLabel">Ikuti Kanal Resmi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">Dapatkan info terbaru PLP-KKN dan update kegiatan LPPM UNIMED langsung dari kanal resmi.</p>
+                    <div class="channel-list d-grid gap-3">
+                        <a href="https://whatsapp.com/channel/0029VbAcoNAJf05gpBUX6a0u" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-whatsapp text-success"></i>
+                            <div>
+                                <div>Channel PLP</div>
+                                <small class="text-muted">WhatsApp Channel resmi PLP</small>
+                            </div>
+                        </a>
+                        <a href="https://www.instagram.com/lppm.unimed?igsh=MTJkM2pwdHkwN2dlNA==" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-instagram text-danger"></i>
+                            <div>
+                                <div>Instagram LPPM</div>
+                                <small class="text-muted">Update program dan agenda LPPM</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const navbar = document.querySelector('.navbar');
         window.addEventListener('scroll', () => {
             navbar.classList.toggle('scrolled', window.scrollY > 20);
         });
+
+        const channelModal = document.getElementById('channelModal');
+        if (channelModal) {
+            const modalInstance = new bootstrap.Modal(channelModal);
+            modalInstance.show();
+        }
     </script>
 </body>
 

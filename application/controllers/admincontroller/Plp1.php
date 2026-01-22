@@ -998,6 +998,7 @@ class Plp1 extends Modulebaseadmin
                     ['data' => 'phone', 'label' => 'No HP'],
                     ['data' => 'nama_prodi', 'label' => 'Program Studi'],
                     ['data' => 'total_students', 'label' => 'Mahasiswa Binaan', 'className' => 'text-center'],
+                    ['data' => 'id', 'label' => 'Aksi', 'type' => 'edit_action', 'className' => 'text-end'],
                 ],
             ],
             'mahasiswa' => [

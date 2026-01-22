@@ -171,6 +171,24 @@ $activeLabel = $hasActiveProgram
                         </div>
                     `;
                 };
+            } else if (column.type === 'edit_action') {
+                col.orderable = false;
+                col.render = function (value) {
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item action-edit" href="#" data-id="${value}">
+                                        <i class="bi bi-pencil-square me-2 text-dark"></i>Edit
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                };
             } else {
                 col.render = function (value) {
                     if (value === null || value === undefined || value === '') {
@@ -213,7 +231,7 @@ $activeLabel = $hasActiveProgram
             headers.forEach(function (header, index) {
                 const $header = $(header);
                 const config = columnsConfig[index] || {};
-                const orderable = config.orderable !== false && config.type !== 'detail_action';
+                const orderable = config.orderable !== false && config.type !== 'detail_action' && config.type !== 'edit_action';
                 if (!orderable) {
                     return;
                 }
@@ -237,6 +255,7 @@ $activeLabel = $hasActiveProgram
         table.on('order.dt', syncSortIcons);
 
         const isMahasiswa = <?= $entityKey === 'mahasiswa' ? 'true' : 'false' ?>;
+        const isDosen = <?= $entityKey === 'dosen' ? 'true' : 'false' ?>;
         if (isMahasiswa) {
             const detailModalEl = document.getElementById('studentDetailModal');
             const detailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
@@ -277,5 +296,137 @@ $activeLabel = $hasActiveProgram
                 detailModal.show();
             });
         }
+
+        if (isDosen) {
+            const dosenModalEl = document.getElementById('plpDosenModal');
+            const dosenModal = dosenModalEl ? new bootstrap.Modal(dosenModalEl) : null;
+
+            function openEditModal(rowData) {
+                if (!dosenModal || !rowData) {
+                    return;
+                }
+                $('#plpDosenId').val(rowData.id || '');
+                $('#plpDosenNama').val(rowData.lecturer_name || rowData.nama || '');
+                $('#plpDosenNidn').val(rowData.nidn || '');
+                $('#plpDosenEmail').val(rowData.email || '');
+                $('#plpDosenHp').val(rowData.phone || '');
+                const fakultasValue = rowData.fakultas || '';
+                const prodiValue = rowData.id_prodi || '';
+                $('#plpDosenFakultas')
+                    .val(fakultasValue)
+                    .trigger('change', { desiredValue: prodiValue });
+                dosenModal.show();
+            }
+
+            $('#plpMasterDataTable').on('click', '.action-edit', function (e) {
+                e.preventDefault();
+                const rowData = table.row($(this).closest('tr')).data();
+                if (!rowData) {
+                    return;
+                }
+                openEditModal(rowData);
+            });
+
+            $('#plpDosenForm').on('submit', async function (e) {
+                e.preventDefault();
+                const id = $('#plpDosenId').val();
+                if (!id) {
+                    return;
+                }
+
+                const formData = new FormData(this);
+
+                try {
+                    const response = await fetch(`${baseUrl}super-admin/dosen/update/${id}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        const message = result?.message || 'Gagal menyimpan data dosen';
+                        throw new Error(message);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Diperbarui',
+                        text: result?.message || 'Data dosen berhasil diperbarui.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        dosenModal.hide();
+                        table.ajax.reload(null, false);
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: error.message || 'Terjadi kesalahan.'
+                    });
+                }
+            });
+        }
     });
 </script>
+
+<?php if ($entityKey === 'dosen'): ?>
+    <div class="modal fade" id="plpDosenModal" tabindex="-1" aria-labelledby="plpDosenModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="plpDosenModalTitle">Edit Dosen</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="plpDosenForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="plpDosenId" name="id">
+                        <div class="mb-3">
+                            <label for="plpDosenNama" class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="plpDosenNama" name="nama" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plpDosenNidn" class="form-label">NIP / NIDN</label>
+                            <input type="text" class="form-control" id="plpDosenNidn" name="nidn" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plpDosenEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="plpDosenEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plpDosenHp" class="form-label">No HP</label>
+                            <input type="text" class="form-control" id="plpDosenHp" name="no_hp">
+                        </div>
+                        <div class="mb-3">
+                            <label for="plpDosenFakultas" class="form-label">Fakultas</label>
+                            <select
+                                class="form-select sa-fakultas-select"
+                                id="plpDosenFakultas"
+                                name="fakultas"
+                                data-placeholder="Pilih Fakultas"
+                                data-prodi-target="#plpDosenProdi">
+                                <option value="">Pilih Fakultas</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plpDosenProdi" class="form-label">Program Studi</label>
+                            <select
+                                class="form-select sa-prodi-select"
+                                id="plpDosenProdi"
+                                name="id_prodi"
+                                data-placeholder="Pilih Prodi"
+                                data-faculty-source="#plpDosenFakultas"
+                                required>
+                                <option value="">Pilih Prodi</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
