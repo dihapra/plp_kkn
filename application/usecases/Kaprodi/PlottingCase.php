@@ -285,11 +285,30 @@ class PlottingCase extends BaseCase
             ->get()
             ->row();
 
+        $prodiRow = $this->CI->db
+            ->select('prodi.nama')
+            ->from('dosen')
+            ->join('prodi', 'prodi.id = dosen.id_prodi', 'left')
+            ->where('dosen.id', $dosenId)
+            ->limit(1)
+            ->get()
+            ->row();
+
         $schoolName = $schoolRow ? trim((string) $schoolRow->nama) : 'Kelompok';
+        $prodiLabel = $prodiRow && !empty($prodiRow->nama) ? trim((string) $prodiRow->nama) : '';
+        $baseName = trim($schoolName . ($prodiLabel !== '' ? ' ' . $prodiLabel : ''));
+        if ($baseName === '') {
+            $baseName = 'Kelompok';
+        }
         $groupIndex = $existingCount + 1;
-        $groupName = trim($schoolName . ' ' . $groupIndex);
-        if ($groupName === '') {
-            $groupName = 'Kelompok ' . $groupIndex;
+        $groupName = trim($baseName . ' ' . $groupIndex);
+        while ($this->CI->db
+            ->from('program_kelompok')
+            ->where('id_program', $programId)
+            ->where('nama_kelompok', $groupName)
+            ->count_all_results() > 0) {
+            $groupIndex++;
+            $groupName = trim($baseName . ' ' . $groupIndex);
         }
 
         $now = date('Y-m-d H:i:s');
