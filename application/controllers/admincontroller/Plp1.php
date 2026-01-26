@@ -611,6 +611,329 @@ class Plp1 extends Modulebaseadmin
         $this->masterDataDatatableResponse('mahasiswa');
     }
 
+    public function master_data_mahasiswa_options()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        $activeProgram = $this->getActivePlpProgram();
+        $programId = $activeProgram ? (int) $activeProgram['id'] : 0;
+        if ($programId <= 0) {
+            response_error('Program aktif tidak tersedia.', null, 422);
+            return;
+        }
+
+        $schools = $this->db->select('sekolah.id, sekolah.nama')
+            ->from('program_sekolah ps')
+            ->join('sekolah', 'sekolah.id = ps.id_sekolah', 'inner')
+            ->where('ps.id_program', $programId)
+            ->order_by('sekolah.nama', 'ASC')
+            ->get()
+            ->result_array();
+
+        $teachers = $this->db->select('guru.id, guru.nama')
+            ->from('program_guru pg')
+            ->join('guru', 'guru.id = pg.id_guru', 'inner')
+            ->where('pg.id_program', $programId)
+            ->group_by('guru.id')
+            ->order_by('guru.nama', 'ASC')
+            ->get()
+            ->result_array();
+
+        $lecturers = $this->db->select('dosen.id, dosen.nama')
+            ->from('program_dosen pd')
+            ->join('dosen', 'dosen.id = pd.id_dosen', 'inner')
+            ->where('pd.id_program', $programId)
+            ->group_by('dosen.id')
+            ->order_by('dosen.nama', 'ASC')
+            ->get()
+            ->result_array();
+
+        response_json('OK', [
+            'schools' => $schools,
+            'teachers' => $teachers,
+            'lecturers' => $lecturers,
+        ]);
+    }
+
+    public function master_data_mahasiswa_store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        $activeProgram = $this->getActivePlpProgram();
+        $programId = $activeProgram ? (int) $activeProgram['id'] : 0;
+        if ($programId <= 0) {
+            response_error('Program aktif tidak tersedia.', null, 422);
+            return;
+        }
+
+        $payload = $this->input->post(null, true) ?? [];
+        $id = (int) ($payload['id'] ?? 0);
+        $nama = trim((string) ($payload['nama'] ?? ''));
+        $nim = trim((string) ($payload['nim'] ?? ''));
+        $email = trim((string) ($payload['email'] ?? ''));
+        $noHp = trim((string) ($payload['no_hp'] ?? ''));
+        $idProdi = (int) ($payload['id_prodi'] ?? 0);
+        $idSekolah = (int) ($payload['id_sekolah'] ?? 0);
+        $idGuru = (int) ($payload['id_guru'] ?? 0);
+        $idDosen = (int) ($payload['id_dosen'] ?? 0);
+        $status = 'verified';
+
+        if ($nama === '' || $nim === '' || $email === '' || $idProdi <= 0) {
+            response_error('Nama, NIM, email, dan program studi wajib diisi.', null, 422);
+            return;
+        }
+
+        $prodiExists = $this->db->select('id')
+            ->from('prodi')
+            ->where('id', $idProdi)
+            ->limit(1)
+            ->get()
+            ->row();
+        if (!$prodiExists) {
+            response_error('Program studi tidak ditemukan.', null, 422);
+            return;
+        }
+
+        if ($idSekolah > 0) {
+            $schoolExists = $this->db->select('id')
+                ->from('program_sekolah')
+                ->where('id_program', $programId)
+                ->where('id_sekolah', $idSekolah)
+                ->limit(1)
+                ->get()
+                ->row();
+            if (!$schoolExists) {
+                response_error('Sekolah tidak terdaftar pada program aktif.', null, 422);
+                return;
+            }
+        }
+
+        if ($idGuru > 0) {
+            $teacherExists = $this->db->select('id')
+                ->from('program_guru')
+                ->where('id_program', $programId)
+                ->where('id_guru', $idGuru)
+                ->limit(1)
+                ->get()
+                ->row();
+            if (!$teacherExists) {
+                response_error('Guru pamong tidak terdaftar pada program aktif.', null, 422);
+                return;
+            }
+        }
+
+        if ($idDosen > 0) {
+            $lecturerExists = $this->db->select('id')
+                ->from('program_dosen')
+                ->where('id_program', $programId)
+                ->where('id_dosen', $idDosen)
+                ->limit(1)
+                ->get()
+                ->row();
+            if (!$lecturerExists) {
+                response_error('Dosen pembimbing tidak terdaftar pada program aktif.', null, 422);
+                return;
+            }
+        }
+
+        $db = $this->db;
+        $now = date('Y-m-d H:i:s');
+        $currentUserId = $this->session->userdata('id_user');
+        $currentUserId = $currentUserId ? (int) $currentUserId : null;
+
+        try {
+            $db->trans_begin();
+
+            if ($id > 0) {
+                $studentRow = $db->select('id, id_user, nim')
+                    ->from('mahasiswa')
+                    ->where('id', $id)
+                    ->limit(1)
+                    ->get()
+                    ->row();
+            } else {
+                $studentRow = $db->select('id, id_user, nim')
+                    ->from('mahasiswa')
+                    ->where('nim', $nim)
+                    ->limit(1)
+                    ->get()
+                    ->row();
+            }
+
+            if ($id > 0 && !$studentRow) {
+                throw new \RuntimeException('Data mahasiswa tidak ditemukan.');
+            }
+
+            $mahasiswaId = null;
+            $userId = null;
+
+            if ($studentRow) {
+                $mahasiswaId = (int) $studentRow->id;
+                $userId = $studentRow->id_user ? (int) $studentRow->id_user : null;
+                $existingNim = (string) ($studentRow->nim ?? '');
+
+                $nimOwner = $db->select('id')
+                    ->from('mahasiswa')
+                    ->where('nim', $nim)
+                    ->where('id !=', $mahasiswaId)
+                    ->limit(1)
+                    ->get()
+                    ->row();
+                if ($nimOwner) {
+                    throw new \RuntimeException('NIM sudah terdaftar.');
+                }
+
+                $emailOwner = $db->select('id')
+                    ->from('users')
+                    ->where('email', $email)
+                    ->limit(1)
+                    ->get()
+                    ->row();
+                if ($emailOwner && (!$userId || (int) $emailOwner->id !== $userId)) {
+                    throw new \RuntimeException('Email sudah digunakan oleh akun lain.');
+                }
+
+                if ($userId) {
+                    $userPayload = [
+                        'email' => $email,
+                        'username' => $nama,
+                        'updated_at' => $now,
+                        'updated_by' => $currentUserId,
+                    ];
+                    if ($existingNim !== '' && $existingNim !== $nim) {
+                        $userPayload['password'] = password_hash($nim, PASSWORD_BCRYPT);
+                    }
+                    $db->where('id', $userId)->update('users', $userPayload);
+                } else {
+                    $db->insert('users', [
+                        'email' => $email,
+                        'username' => $nama,
+                        'password' => password_hash($nim, PASSWORD_BCRYPT),
+                        'role' => 'mahasiswa',
+                        'fakultas' => null,
+                        'has_change' => 0,
+                        'id_program' => null,
+                        'created_at' => $now,
+                        'created_by' => $currentUserId,
+                    ]);
+                    $userId = (int) $db->insert_id();
+                    if ($userId <= 0) {
+                        throw new \RuntimeException('Gagal membuat akun mahasiswa.');
+                    }
+                    $db->where('id', $mahasiswaId)->update('mahasiswa', [
+                        'id_user' => $userId,
+                        'updated_at' => $now,
+                        'updated_by' => $currentUserId,
+                    ]);
+                }
+
+                $db->where('id', $mahasiswaId)->update('mahasiswa', [
+                    'nama' => $nama,
+                    'nim' => $nim,
+                    'email' => $email,
+                    'no_hp' => $noHp !== '' ? $noHp : null,
+                    'id_prodi' => $idProdi,
+                    'updated_at' => $now,
+                    'updated_by' => $currentUserId,
+                ]);
+            } else {
+                $emailOwner = $db->select('id')
+                    ->from('users')
+                    ->where('email', $email)
+                    ->limit(1)
+                    ->get()
+                    ->row();
+                if ($emailOwner) {
+                    throw new \RuntimeException('Email sudah terdaftar.');
+                }
+
+                $db->insert('users', [
+                    'email' => $email,
+                    'username' => $nama,
+                    'password' => password_hash($nim, PASSWORD_BCRYPT),
+                    'role' => 'mahasiswa',
+                    'fakultas' => null,
+                    'has_change' => 0,
+                    'id_program' => null,
+                    'created_at' => $now,
+                    'created_by' => $currentUserId,
+                ]);
+                $userId = (int) $db->insert_id();
+
+                if ($userId <= 0) {
+                    throw new \RuntimeException('Gagal membuat akun mahasiswa.');
+                }
+
+                $db->insert('mahasiswa', [
+                    'id_user' => $userId,
+                    'nama' => $nama,
+                    'nim' => $nim,
+                    'email' => $email,
+                    'no_hp' => $noHp !== '' ? $noHp : null,
+                    'id_prodi' => $idProdi,
+                    'created_at' => $now,
+                    'created_by' => $currentUserId,
+                ]);
+
+                $mahasiswaId = (int) $db->insert_id();
+                if ($mahasiswaId <= 0) {
+                    throw new \RuntimeException('Gagal menyimpan data mahasiswa.');
+                }
+            }
+
+            $programRow = $db->select('id')
+                ->from('program_mahasiswa')
+                ->where('id_program', $programId)
+                ->where('id_mahasiswa', $mahasiswaId)
+                ->order_by('valid_from', 'DESC')
+                ->order_by('id', 'DESC')
+                ->limit(1)
+                ->get()
+                ->row();
+
+            $programPayload = [
+                'id_sekolah' => $idSekolah > 0 ? $idSekolah : null,
+                'id_guru' => $idGuru > 0 ? $idGuru : null,
+                'id_dosen' => $idDosen > 0 ? $idDosen : null,
+                'status' => $status !== '' ? $status : null,
+                'updated_at' => $now,
+                'updated_by' => $currentUserId,
+            ];
+
+            if ($programRow) {
+                $db->where('id', (int) $programRow->id)
+                    ->update('program_mahasiswa', $programPayload);
+            } else {
+                $programPayload['id_program'] = $programId;
+                $programPayload['id_mahasiswa'] = $mahasiswaId;
+                $programPayload['valid_from'] = $now;
+                $programPayload['created_at'] = $now;
+                $programPayload['created_by'] = $currentUserId;
+                $db->insert('program_mahasiswa', $programPayload);
+
+                if ((int) $db->insert_id() <= 0) {
+                    throw new \RuntimeException('Gagal menyimpan data program mahasiswa.');
+                }
+            }
+
+            if ($db->trans_status() === false) {
+                throw new \RuntimeException('Gagal menyimpan data mahasiswa.');
+            }
+
+            $db->trans_commit();
+            response_json('Data mahasiswa berhasil disimpan.');
+        } catch (\Throwable $th) {
+            $db->trans_rollback();
+            response_error($th->getMessage(), $th, 422);
+        }
+    }
+
     public function master_data_guru_datatable()
     {
         $this->masterDataDatatableResponse('guru');

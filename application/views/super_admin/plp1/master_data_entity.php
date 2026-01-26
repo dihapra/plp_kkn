@@ -41,9 +41,16 @@ $activeLabel = $hasActiveProgram
     <?php endif; ?>
 
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="fw-semibold"><?= htmlspecialchars($title) ?></span>
-            <small class="text-muted">Data otomatis terfilter untuk program PLP I yang sedang aktif.</small>
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="fw-semibold"><?= htmlspecialchars($title) ?></span>
+                <div class="text-muted small">Data otomatis terfilter untuk program PLP I yang sedang aktif.</div>
+            </div>
+            <?php if ($entityKey === 'mahasiswa' && $hasActiveProgram): ?>
+                <button type="button" class="btn btn-sm btn-primary" id="btnAddPlpMahasiswa">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah Mahasiswa
+                </button>
+            <?php endif; ?>
         </div>
         <div class="card-body px-3 pb-3 pt-3">
             <div class="table-responsive">
@@ -81,6 +88,46 @@ $activeLabel = $hasActiveProgram
         .student-detail-modal .modal-footer {
             background: transparent;
         }
+
+        .plp-mahasiswa-modal .modal-content {
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .plp-mahasiswa-modal .modal-header,
+        .plp-mahasiswa-modal .modal-body,
+        .plp-mahasiswa-modal .modal-footer {
+            background: transparent;
+        }
+
+        .plp-mahasiswa-modal .form-label,
+        .plp-mahasiswa-modal .form-text,
+        .plp-mahasiswa-modal small,
+        .plp-mahasiswa-modal .text-muted {
+            color: rgba(248, 250, 252, 0.72) !important;
+        }
+
+        .plp-mahasiswa-modal .form-control,
+        .plp-mahasiswa-modal .form-select {
+            background-color: #111827;
+            border-color: rgba(148, 163, 184, 0.25);
+            color: #f8fafc;
+        }
+
+        .plp-mahasiswa-modal .form-control::placeholder {
+            color: rgba(148, 163, 184, 0.65);
+        }
+
+        .plp-mahasiswa-modal .btn-close {
+            filter: invert(1) grayscale(1);
+        }
+
+        .plp-mahasiswa-modal .select2-container--default .select2-selection--single,
+        .plp-mahasiswa-modal .select2-container--default .select2-results__option,
+        .plp-mahasiswa-modal .select2-container--default .select2-search__field {
+            color: #111827;
+        }
     </style>
     <div class="modal fade student-detail-modal" id="studentDetailModal" tabindex="-1" aria-labelledby="studentDetailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -98,6 +145,95 @@ $activeLabel = $hasActiveProgram
             </div>
         </div>
     </div>
+    <div class="modal fade plp-mahasiswa-modal" id="plpMahasiswaModal" tabindex="-1" aria-labelledby="plpMahasiswaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="plpMahasiswaModalLabel">Tambah Mahasiswa PLP I</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="plpMahasiswaForm">
+                    <div class="modal-body pt-0">
+                        <input type="hidden" id="plpMahasiswaId" name="id">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaNama" class="form-label">Nama</label>
+                                <input type="text" class="form-control" id="plpMahasiswaNama" name="nama" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaNim" class="form-label">NIM</label>
+                                <input type="text" class="form-control" id="plpMahasiswaNim" name="nim" required>
+                                <small class="text-muted">Jika NIM sudah terdaftar, data akan diperbarui.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="plpMahasiswaEmail" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaHp" class="form-label">No HP</label>
+                                <input type="text" class="form-control" id="plpMahasiswaHp" name="no_hp" placeholder="opsional">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaFakultas" class="form-label">Fakultas</label>
+                                <select
+                                    class="form-select sa-fakultas-select"
+                                    id="plpMahasiswaFakultas"
+                                    name="fakultas"
+                                    data-placeholder="Pilih Fakultas"
+                                    data-prodi-target="#plpMahasiswaProdi">
+                                    <option value="">Pilih Fakultas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaProdi" class="form-label">Program Studi</label>
+                                <select
+                                    class="form-select sa-prodi-select"
+                                    id="plpMahasiswaProdi"
+                                    name="id_prodi"
+                                    data-placeholder="Pilih Prodi"
+                                    data-faculty-source="#plpMahasiswaFakultas"
+                                    required>
+                                    <option value="">Pilih Prodi</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaSekolah" class="form-label">Sekolah</label>
+                                <select class="form-select" id="plpMahasiswaSekolah" name="id_sekolah">
+                                    <option value="">Pilih Sekolah</option>
+                                </select>
+                                <small class="text-muted">Opsional</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaGuru" class="form-label">Guru Pamong</label>
+                                <select class="form-select" id="plpMahasiswaGuru" name="id_guru">
+                                    <option value="">Pilih Guru Pamong</option>
+                                </select>
+                                <small class="text-muted">Opsional</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaDosen" class="form-label">DPL</label>
+                                <select class="form-select" id="plpMahasiswaDosen" name="id_dosen">
+                                    <option value="">Pilih DPL</option>
+                                </select>
+                                <small class="text-muted">Opsional</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="plpMahasiswaStatus" class="form-label">Status</label>
+                                <input type="hidden" name="status" value="verified">
+                                <select class="form-select" id="plpMahasiswaStatus" disabled>
+                                    <option value="verified" selected>Verified</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="plpMahasiswaSubmitBtn">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
 
 <script>
@@ -109,6 +245,8 @@ $activeLabel = $hasActiveProgram
 
         const columnsConfig = <?= json_encode($columns, JSON_UNESCAPED_UNICODE) ?>;
         const datatablePath = <?= json_encode($datatablePath, JSON_UNESCAPED_SLASHES) ?>;
+        const isMahasiswa = <?= $entityKey === 'mahasiswa' ? 'true' : 'false' ?>;
+        const isDosen = <?= $entityKey === 'dosen' ? 'true' : 'false' ?>;
 
         function renderStatusBadge(status) {
             if (!status) {
@@ -156,6 +294,13 @@ $activeLabel = $hasActiveProgram
             } else if (column.type === 'detail_action') {
                 col.orderable = false;
                 col.render = function (value, type, row) {
+                    const editItem = isMahasiswa ? `
+                        <li>
+                            <a class="dropdown-item action-edit" href="#" data-id="${value}">
+                                <i class="bi bi-pencil-square me-2 text-dark"></i>Edit
+                            </a>
+                        </li>
+                    ` : '';
                     return `
                         <div class="dropdown">
                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -167,6 +312,7 @@ $activeLabel = $hasActiveProgram
                                         <i class="bi bi-eye me-2 text-primary"></i>Detail
                                     </a>
                                 </li>
+                                ${editItem}
                             </ul>
                         </div>
                     `;
@@ -254,12 +400,15 @@ $activeLabel = $hasActiveProgram
         syncSortIcons();
         table.on('order.dt', syncSortIcons);
 
-        const isMahasiswa = <?= $entityKey === 'mahasiswa' ? 'true' : 'false' ?>;
-        const isDosen = <?= $entityKey === 'dosen' ? 'true' : 'false' ?>;
         if (isMahasiswa) {
             const detailModalEl = document.getElementById('studentDetailModal');
             const detailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
             const $detailList = $('#studentDetailList');
+            const createModalEl = document.getElementById('plpMahasiswaModal');
+            const createModal = createModalEl ? new bootstrap.Modal(createModalEl) : null;
+            const optionUrl = `${baseUrl}super-admin/plp/master-data/mahasiswa/options`;
+            const storeUrl = `${baseUrl}super-admin/plp/master-data/mahasiswa/store`;
+            let selectOptions = null;
 
             function renderDetailRow(label, value) {
                 const safeValue = value !== null && value !== undefined && value !== '' ? value : '-';
@@ -294,6 +443,188 @@ $activeLabel = $hasActiveProgram
                 ];
                 $detailList.html(rows.join(''));
                 detailModal.show();
+            });
+
+            function normalizeOptions(items) {
+                return (items || []).map(function (item) {
+                    return {
+                        id: item.id,
+                        name: item.nama || item.name || '-'
+                    };
+                });
+            }
+
+            function setSelectOptions($select, items, placeholder) {
+                if (!$select.length) {
+                    return;
+                }
+                $select.empty();
+                $select.append(new Option(placeholder, '', false, false));
+                items.forEach(function (item) {
+                    $select.append(new Option(item.name, item.id, false, false));
+                });
+            }
+
+            function initSelect2($select, dropdownParent) {
+                if (!$select.length || !$select.select2) {
+                    return;
+                }
+                if ($select.data('select2')) {
+                    $select.select2('destroy');
+                }
+                $select.select2({
+                    placeholder: $select.find('option').first().text() || 'Pilih',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: dropdownParent || undefined
+                });
+            }
+
+            function resetMahasiswaForm() {
+                $('#plpMahasiswaId').val('');
+                $('#plpMahasiswaNama').val('');
+                $('#plpMahasiswaNim').val('');
+                $('#plpMahasiswaEmail').val('');
+                $('#plpMahasiswaHp').val('');
+                $('#plpMahasiswaFakultas').val('').trigger('change');
+                $('#plpMahasiswaProdi').val('').trigger('change');
+                $('#plpMahasiswaSekolah').val('');
+                $('#plpMahasiswaGuru').val('');
+                $('#plpMahasiswaDosen').val('');
+                $('#plpMahasiswaStatus').val('verified');
+                $('#plpMahasiswaModalLabel').text('Tambah Mahasiswa PLP I');
+                $('#plpMahasiswaSubmitBtn').text('Simpan');
+            }
+
+            async function loadMahasiswaOptions() {
+                if (selectOptions) {
+                    return selectOptions;
+                }
+
+                const response = await fetch(optionUrl, { method: 'GET' });
+                const result = await response.json();
+                if (!response.ok) {
+                    const message = result?.message || 'Gagal memuat data pendukung.';
+                    throw new Error(message);
+                }
+
+                selectOptions = {
+                    schools: normalizeOptions(result.data?.schools || result.schools),
+                    teachers: normalizeOptions(result.data?.teachers || result.teachers),
+                    lecturers: normalizeOptions(result.data?.lecturers || result.lecturers)
+                };
+
+                return selectOptions;
+            }
+
+            function applyMahasiswaOptions(options) {
+                const $school = $('#plpMahasiswaSekolah');
+                const $teacher = $('#plpMahasiswaGuru');
+                const $lecturer = $('#plpMahasiswaDosen');
+
+                setSelectOptions($school, options.schools, 'Pilih Sekolah');
+                setSelectOptions($teacher, options.teachers, 'Pilih Guru Pamong');
+                setSelectOptions($lecturer, options.lecturers, 'Pilih DPL');
+
+                const dropdownParent = createModalEl ? $(createModalEl) : null;
+                initSelect2($school, dropdownParent);
+                initSelect2($teacher, dropdownParent);
+                initSelect2($lecturer, dropdownParent);
+            }
+
+            $('#btnAddPlpMahasiswa').on('click', async function () {
+                if (!createModal) {
+                    return;
+                }
+                resetMahasiswaForm();
+                try {
+                    const options = await loadMahasiswaOptions();
+                    applyMahasiswaOptions(options);
+                    createModal.show();
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: error.message || 'Tidak dapat memuat data.'
+                    });
+                }
+            });
+
+            $('#plpMasterDataTable').on('click', '.action-edit', async function (e) {
+                e.preventDefault();
+                if (!createModal) {
+                    return;
+                }
+                const rowData = table.row($(this).closest('tr')).data();
+                if (!rowData) {
+                    return;
+                }
+                resetMahasiswaForm();
+                try {
+                    const options = await loadMahasiswaOptions();
+                    applyMahasiswaOptions(options);
+                    $('#plpMahasiswaId').val(rowData.id || '');
+                    $('#plpMahasiswaNama').val(rowData.student_name || '');
+                    $('#plpMahasiswaNim').val(rowData.nim || '');
+                    $('#plpMahasiswaEmail').val(rowData.email || '');
+                    $('#plpMahasiswaHp').val(rowData.phone || '');
+                    const fakultasValue = rowData.fakultas || '';
+                    const prodiValue = rowData.id_prodi || '';
+                    $('#plpMahasiswaFakultas')
+                        .val(fakultasValue)
+                        .trigger('change', { desiredValue: prodiValue });
+                    $('#plpMahasiswaSekolah').val(rowData.id_sekolah || '').trigger('change');
+                    $('#plpMahasiswaGuru').val(rowData.id_guru || '').trigger('change');
+                    $('#plpMahasiswaDosen').val(rowData.id_dosen || '').trigger('change');
+                    $('#plpMahasiswaModalLabel').text('Edit Mahasiswa PLP I');
+                    $('#plpMahasiswaSubmitBtn').text('Simpan Perubahan');
+                    createModal.show();
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: error.message || 'Tidak dapat memuat data.'
+                    });
+                }
+            });
+
+            $('#plpMahasiswaForm').on('submit', async function (e) {
+                e.preventDefault();
+                if (!createModal) {
+                    return;
+                }
+
+                const formData = new FormData(this);
+
+                try {
+                    const response = await fetch(storeUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        const message = result?.message || 'Gagal menyimpan data mahasiswa.';
+                        throw new Error(message);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tersimpan',
+                        text: result?.message || 'Data mahasiswa berhasil disimpan.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(function () {
+                        createModal.hide();
+                        table.ajax.reload(null, false);
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: error.message || 'Terjadi kesalahan.'
+                    });
+                }
             });
         }
 
