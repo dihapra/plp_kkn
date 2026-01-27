@@ -60,11 +60,15 @@ class PlottingCase extends BaseCase
 
         $studentIds = array_values(array_unique(array_map('intval', $studentIds)));
         $studentCount = count($studentIds);
+        $prodiInfo = $this->getDosenProdiInfo($dosenId);
+        $prodiName = $prodiInfo['name'];
+        $prodiId = $prodiInfo['id'];
+        $maxStudents = $this->getMaxStudentsForProdiName($prodiName);
         if ($studentCount < 5) {
             throw new \InvalidArgumentException('Minimal 5 mahasiswa wajib dipilih untuk plotting.');
         }
-        if ($studentCount > 13) {
-            throw new \InvalidArgumentException('Maksimal 13 mahasiswa dapat dipilih untuk plotting.');
+        if ($studentCount > $maxStudents) {
+            throw new \InvalidArgumentException('Maksimal ' . $maxStudents . ' mahasiswa dapat dipilih untuk plotting.');
         }
 
         $currentDosenId = $currentDosenId && $currentDosenId > 0 ? $currentDosenId : null;
@@ -110,8 +114,8 @@ class PlottingCase extends BaseCase
 
         $existingCount = (int) $existingCountQuery->count_all_results();
         $totalForDosen = $existingCount + $studentCount;
-        if ($existingCount >= 10) {
-            throw new \InvalidArgumentException('DPL sudah memenuhi kuota 10-13 mahasiswa.');
+        if ($existingCount >= $maxStudents) {
+            throw new \InvalidArgumentException('DPL sudah memenuhi kuota maksimal ' . $maxStudents . ' mahasiswa.');
         }
         if ($totalForDosen > 8 && $totalForDosen < 10) {
             throw new \InvalidArgumentException('Jika lebih dari 8, total mahasiswa untuk DPL minimal 10 mahasiswa.');
@@ -119,27 +123,34 @@ class PlottingCase extends BaseCase
         if ($totalForDosen < 10 && $totalSchools >= 2) {
             throw new \InvalidArgumentException('Total mahasiswa untuk DPL minimal 10 mahasiswa.');
         }
-        if ($totalForDosen > 13) {
-            throw new \InvalidArgumentException('Total mahasiswa untuk DPL maksimal 13 mahasiswa.');
+        if ($totalForDosen > $maxStudents) {
+            throw new \InvalidArgumentException('Total mahasiswa untuk DPL maksimal ' . $maxStudents . ' mahasiswa.');
         }
 
         $schoolAssignedQuery = $this->CI->db
             ->select('pm.id_dosen')
             ->from('program_mahasiswa pm')
-            ->join('mahasiswa', 'mahasiswa.id = pm.id_mahasiswa', 'inner')
+            ->join('dosen', 'dosen.id = pm.id_dosen', 'inner')
             ->where('pm.id_program', $programId)
             ->where('pm.id_sekolah', $sekolahId)
             ->where('pm.id_dosen IS NOT NULL', null, false);
 
         if (!empty($allowedProdiIds)) {
-            $schoolAssignedQuery->where_in('mahasiswa.id_prodi', $allowedProdiIds);
+            $schoolAssignedQuery->where_in('dosen.id_prodi', $allowedProdiIds);
+        }
+        if ($prodiId > 0) {
+            $schoolAssignedQuery->where('dosen.id_prodi', $prodiId);
         }
         if ($currentDosenId && $currentSchoolId && $currentDosenId === $dosenId && $currentSchoolId === $sekolahId) {
             $schoolAssignedQuery->where('NOT (pm.id_dosen = ' . (int) $currentDosenId . ' AND pm.id_sekolah = ' . (int) $currentSchoolId . ')', null, false);
         }
 
-        $schoolAssigned = $schoolAssignedQuery->limit(1)->get()->row();
-        if ($schoolAssigned) {
+        $existingSchoolDosen = $schoolAssignedQuery->get()->result();
+        $existingSchoolDosenIds = array_unique(array_map(function ($row) {
+            return (int) $row->id_dosen;
+        }, $existingSchoolDosen));
+        $maxDosenPerSchool = $this->isPtbProdi($prodiName) ? 2 : 1;
+        if (count($existingSchoolDosenIds) >= $maxDosenPerSchool) {
             throw new \InvalidArgumentException('Sekolah sudah memiliki DPL untuk prodi ini.');
         }
 
@@ -432,6 +443,40 @@ class PlottingCase extends BaseCase
         return $row;
     }
 
+    private function getDosenProdiInfo(int $dosenId): array
+    {
+        $row = $this->CI->db
+            ->select('prodi.id, prodi.nama')
+            ->from('dosen')
+            ->join('prodi', 'prodi.id = dosen.id_prodi', 'left')
+            ->where('dosen.id', $dosenId)
+            ->limit(1)
+            ->get()
+            ->row();
+
+        return [
+            'id' => $row && !empty($row->id) ? (int) $row->id : 0,
+            'name' => $row && !empty($row->nama) ? trim((string) $row->nama) : '',
+        ];
+    }
+
+    private function getMaxStudentsForProdiName(string $prodiName): int
+    {
+        $normalized = strtolower(trim($prodiName));
+        if ($normalized === 'pendidikan tari') {
+            return 17;
+        }
+        if ($normalized === 'pendidikan musik') {
+            return 15;
+        }
+        return 13;
+    }
+
+    private function isPtbProdi(string $prodiName): bool
+    {
+        return strtolower(trim($prodiName)) === 'pendidikan teknik bangunan';
+    }
+
     private function isDosenInProgram(int $programId, int $dosenId): bool
     {
         $row = $this->CI->db
@@ -489,6 +534,7 @@ class PlottingCase extends BaseCase
             ->from('program_mahasiswa pm')
             ->join('mahasiswa', 'mahasiswa.id = pm.id_mahasiswa', 'inner')
             ->where('pm.id_program', $programId)
+            ->where('pm.status', 'verified')
             ->where('(pm.id_dosen IS NULL OR pm.id_sekolah IS NULL)', null, false);
 
         if (!empty($allowedProdiIds)) {

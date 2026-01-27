@@ -127,7 +127,7 @@
 
 <script>
     $(function () {
-        const MAX_STUDENTS = 13;
+        const DEFAULT_MAX_STUDENTS = 13;
         const MIN_STUDENTS_PER_SCHOOL = 5;
         const MIN_STUDENTS_PER_DOSEN = 10;
         const MAX_SCHOOLS_PER_DOSEN = 2;
@@ -135,6 +135,47 @@
         let schoolList = [];
         let studentList = [];
         let plottingRows = [];
+
+        function getMaxStudentsForProdi(prodi) {
+            const name = (prodi || '').trim().toLowerCase();
+            if (name === 'pendidikan tari') {
+                return 17;
+            }
+            if (name === 'pendidikan musik') {
+                return 15;
+            }
+            return DEFAULT_MAX_STUDENTS;
+        }
+
+        function getDosenProdiById(dosenId) {
+            if (!dosenId) {
+                return null;
+            }
+            const dosen = dosenList.find(function (d) { return d.id === dosenId; });
+            return dosen ? dosen.prodi : null;
+        }
+
+        function isPtbProdi(prodi) {
+            return (prodi || '').trim().toLowerCase() === 'pendidikan teknik bangunan';
+        }
+
+        function getSchoolDosenCountForProdi(schoolId, prodi, excludeIndex) {
+            const dosenIds = new Set();
+            const normalized = (prodi || '').trim().toLowerCase();
+            plottingRows.forEach(function (row, index) {
+                if (index === excludeIndex) {
+                    return;
+                }
+                if (row.school_id !== schoolId) {
+                    return;
+                }
+                if (normalized && (row.dosen_prodi || '').trim().toLowerCase() !== normalized) {
+                    return;
+                }
+                dosenIds.add(row.dosen_id);
+            });
+            return dosenIds.size;
+        }
 
         const modalEl = document.getElementById('plottingModal');
         const $modalEl = $('#plottingModal');
@@ -391,10 +432,11 @@
                 .filter(function (dosen) {
                     const usedCount = schoolCounts.get(dosen.id) || 0;
                     const totalStudents = getDosenStudentCount(dosen.id, -1);
+                    const maxStudents = getMaxStudentsForProdi(dosen.prodi);
                     if (dosen.id === currentDosenId) {
                         return true;
                     }
-                    if (totalStudents >= MIN_STUDENTS_PER_DOSEN) {
+                    if (totalStudents >= maxStudents) {
                         return false;
                     }
                     return usedCount < MAX_SCHOOLS_PER_DOSEN;
@@ -408,11 +450,21 @@
             buildOptions($selectDosen, items, 'Pilih dosen...');
         }
 
-        function updateSchoolOptions(currentSchoolId) {
+        function updateSchoolOptions(currentSchoolId, dosenId) {
+            const rowIndex = Number($('#plottingRowIndex').val() || -1);
+            const dosenProdi = getDosenProdiById(dosenId);
+            const maxDosenPerSchool = isPtbProdi(dosenProdi) ? 2 : 1;
             const usedSchoolIds = new Set(plottingRows.map(function (row) { return row.school_id; }));
             const items = schoolList
                 .filter(function (school) {
-                    return !usedSchoolIds.has(school.id) || school.id === currentSchoolId;
+                    if (school.id === currentSchoolId) {
+                        return true;
+                    }
+                    if (!dosenProdi) {
+                        return !usedSchoolIds.has(school.id);
+                    }
+                    const currentCount = getSchoolDosenCountForProdi(school.id, dosenProdi, rowIndex);
+                    return currentCount < maxDosenPerSchool;
                 })
                 .map(function (school) {
                     return {
@@ -495,7 +547,7 @@
             }
 
             updateDosenOptions(currentDosenId, currentSchoolId);
-            updateSchoolOptions(currentSchoolId);
+            updateSchoolOptions(currentSchoolId, currentDosenId);
             updateStudentOptions(currentDosenId, selectedStudents);
 
             $selectDosen.val(currentDosenId ? String(currentDosenId) : '').trigger('change');
@@ -519,6 +571,7 @@
             const value = $(this).val();
             const selectedStudents = ($selectStudents.val() || []).map(function (id) { return Number(id); });
             updateStudentOptions(value ? Number(value) : null, selectedStudents);
+            updateSchoolOptions(Number($selectSchool.val() || 0) || null, value ? Number(value) : null);
         });
 
         $selectSchool.on('change', function () {
@@ -528,7 +581,9 @@
 
         $selectStudents.on('select2:select', function (e) {
             const selectedIds = $selectStudents.val() || [];
-            if (selectedIds.length <= MAX_STUDENTS) {
+            const dosenId = Number($selectDosen.val() || 0);
+            const maxStudents = getMaxStudentsForProdi(getDosenProdiById(dosenId));
+            if (selectedIds.length <= maxStudents) {
                 return;
             }
 
@@ -541,7 +596,7 @@
             Swal.fire({
                 icon: 'warning',
                 title: 'Mahasiswa terlalu banyak',
-                text: 'Plotting maksimal ' + MAX_STUDENTS + ' mahasiswa.'
+                text: 'Plotting maksimal ' + maxStudents + ' mahasiswa.'
             });
         });
 
@@ -552,6 +607,7 @@
             const dosenId = dosenVal ? Number(dosenVal) : 0;
             const schoolId = schoolVal ? Number(schoolVal) : 0;
             const studentIds = ($selectStudents.val() || []).map(function (id) { return Number(id); });
+            const maxStudents = getMaxStudentsForProdi(getDosenProdiById(dosenId));
             if (!dosenId || !schoolId || studentIds.length === 0) {
                 Swal.fire({
                     icon: 'warning',
@@ -568,30 +624,30 @@
                 });
                 return;
             }
-            if (studentIds.length > MAX_STUDENTS) {
+            if (studentIds.length > maxStudents) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Mahasiswa terlalu banyak',
-                    text: 'Plotting maksimal ' + MAX_STUDENTS + ' mahasiswa.'
+                    text: 'Plotting maksimal ' + maxStudents + ' mahasiswa.'
                 });
                 return;
             }
             const rowIndex = Number($('#plottingRowIndex').val() || -1);
             const existingCount = getDosenStudentCount(dosenId, rowIndex);
             const totalForDosen = existingCount + studentIds.length;
-            if (existingCount >= MIN_STUDENTS_PER_DOSEN && dosenId !== Number($('#plottingCurrentDosenId').val() || 0)) {
+            if (existingCount >= maxStudents && dosenId !== Number($('#plottingCurrentDosenId').val() || 0)) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'DPL sudah penuh',
-                    text: 'DPL sudah memenuhi kuota 10-13 mahasiswa.'
+                    text: 'DPL sudah memenuhi kuota maksimal ' + maxStudents + ' mahasiswa.'
                 });
                 return;
             }
-            if (totalForDosen > MAX_STUDENTS) {
+            if (totalForDosen > maxStudents) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Mahasiswa terlalu banyak',
-                    text: 'Total mahasiswa untuk DPL maksimal ' + MAX_STUDENTS + ' mahasiswa.'
+                    text: 'Total mahasiswa untuk DPL maksimal ' + maxStudents + ' mahasiswa.'
                 });
                 return;
             }
@@ -825,3 +881,4 @@
         loadPlottingData();
     });
 </script>
+        

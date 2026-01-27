@@ -589,7 +589,16 @@ class Kaprodi extends MY_Controller
             $studentIds = array_values(array_filter((array) $studentIds, function ($id) {
                 return $id !== null && $id !== '';
             }));
-            $maxStudents = 13;
+            $prodiRow = $this->db
+                ->select('prodi.nama')
+                ->from('dosen')
+                ->join('prodi', 'prodi.id = dosen.id_prodi', 'left')
+                ->where('dosen.id', $dosenId)
+                ->limit(1)
+                ->get()
+                ->row_array();
+            $prodiName = $prodiRow && !empty($prodiRow['nama']) ? (string) $prodiRow['nama'] : '';
+            $maxStudents = $this->getMaxStudentsForProdiName($prodiName);
             if (count($studentIds) < 5) {
                 response_error('Minimal 5 mahasiswa wajib dipilih untuk plotting.', null, 422);
                 return;
@@ -724,5 +733,17 @@ class Kaprodi extends MY_Controller
             ->result_array();
 
         return array_map('intval', array_column($rows, 'id'));
+    }
+
+    private function getMaxStudentsForProdiName(string $prodiName): int
+    {
+        $normalized = strtolower(trim($prodiName));
+        if ($normalized == 'pendidikan tari') {
+            return 17;
+        }
+        if ($normalized == 'pendidikan musik') {
+            return 15;
+        }
+        return 13;
     }
 }
