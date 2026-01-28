@@ -247,6 +247,8 @@ $activeLabel = $hasActiveProgram
         const datatablePath = <?= json_encode($datatablePath, JSON_UNESCAPED_SLASHES) ?>;
         const isMahasiswa = <?= $entityKey === 'mahasiswa' ? 'true' : 'false' ?>;
         const isDosen = <?= $entityKey === 'dosen' ? 'true' : 'false' ?>;
+        const entityKey = <?= json_encode($entityKey, JSON_UNESCAPED_UNICODE) ?>;
+        const deleteBaseUrl = `${baseUrl}super-admin/plp/master-data/${entityKey}/delete/`;
 
         function renderStatusBadge(status) {
             if (!status) {
@@ -301,6 +303,13 @@ $activeLabel = $hasActiveProgram
                             </a>
                         </li>
                     ` : '';
+                    const deleteItem = `
+                        <li>
+                            <a class="dropdown-item text-danger action-delete" href="#" data-id="${value}">
+                                <i class="bi bi-trash me-2"></i>Hapus
+                            </a>
+                        </li>
+                    `;
                     return `
                         <div class="dropdown">
                             <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -313,6 +322,7 @@ $activeLabel = $hasActiveProgram
                                     </a>
                                 </li>
                                 ${editItem}
+                                ${deleteItem}
                             </ul>
                         </div>
                     `;
@@ -329,6 +339,11 @@ $activeLabel = $hasActiveProgram
                                 <li>
                                     <a class="dropdown-item action-edit" href="#" data-id="${value}">
                                         <i class="bi bi-pencil-square me-2 text-dark"></i>Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger action-delete" href="#" data-id="${value}">
+                                        <i class="bi bi-trash me-2"></i>Hapus
                                     </a>
                                 </li>
                             </ul>
@@ -399,6 +414,65 @@ $activeLabel = $hasActiveProgram
 
         syncSortIcons();
         table.on('order.dt', syncSortIcons);
+
+        const entityMeta = {
+            mahasiswa: { label: 'mahasiswa', nameKey: 'student_name', detailKey: 'nim' },
+            dosen: { label: 'dosen', nameKey: 'lecturer_name', detailKey: 'nidn' },
+            guru: { label: 'guru', nameKey: 'teacher_name' },
+            kepsek: { label: 'kepala sekolah', nameKey: 'principal_name' }
+        };
+
+        $('#plpMasterDataTable').on('click', '.action-delete', async function (e) {
+            e.preventDefault();
+            const rowData = table.row($(this).closest('tr')).data();
+            if (!rowData) {
+                return;
+            }
+
+            const meta = entityMeta[entityKey] || { label: 'data', nameKey: 'name' };
+            const name = rowData[meta.nameKey] || rowData.name || '-';
+            const detailValue = meta.detailKey ? rowData[meta.detailKey] : '';
+            const detailLabel = detailValue ? ` (${detailValue})` : '';
+
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Hapus data?',
+                text: `Data ${meta.label} "${name}${detailLabel}" akan dihapus dari program aktif.`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal'
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${deleteBaseUrl}${rowData.id}`, {
+                    method: 'POST'
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload?.message || 'Gagal menghapus data.');
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Terhapus',
+                    text: payload?.message || 'Data berhasil dihapus.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    table.ajax.reload(null, false);
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: error.message || 'Terjadi kesalahan.'
+                });
+            }
+        });
 
         if (isMahasiswa) {
             const detailModalEl = document.getElementById('studentDetailModal');

@@ -67,9 +67,19 @@ class Plp1 extends Modulebase
         $this->renderMasterDataEntity('dosen');
     }
 
+    public function master_data_dosen_delete($id)
+    {
+        $this->deleteMasterDataEntity('dosen', $id);
+    }
+
     public function master_data_mahasiswa()
     {
         $this->renderMasterDataEntity('mahasiswa');
+    }
+
+    public function master_data_mahasiswa_delete($id)
+    {
+        $this->deleteMasterDataEntity('mahasiswa', $id);
     }
 
     public function master_data_mahasiswa_true()
@@ -96,9 +106,19 @@ class Plp1 extends Modulebase
         $this->renderMasterDataEntity('guru');
     }
 
+    public function master_data_guru_delete($id)
+    {
+        $this->deleteMasterDataEntity('guru', $id);
+    }
+
     public function master_data_kepsek()
     {
         $this->renderMasterDataEntity('kepsek');
+    }
+
+    public function master_data_kepsek_delete($id)
+    {
+        $this->deleteMasterDataEntity('kepsek', $id);
     }
 
     public function verifikasi_mahasiswa()
@@ -974,6 +994,29 @@ class Plp1 extends Modulebase
             $data['count_filtered'],
             $data['formatted']
         );
+    }
+
+    protected function deleteMasterDataEntity(string $entityKey, $id): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            response_error('Method Not Allowed', null, 405);
+            return;
+        }
+
+        $activeProgram = $this->getActivePlpProgram();
+        $programId = $activeProgram ? (int) $activeProgram['id'] : 0;
+        if ($programId <= 0) {
+            response_error('Program aktif tidak tersedia.', null, 422);
+            return;
+        }
+
+        try {
+            $uc = new ModuleMasterDataCase();
+            $uc->deleteFromProgram($entityKey, (int) $id, $programId);
+            response_json('Data berhasil dihapus dari program aktif.');
+        } catch (\Throwable $th) {
+            response_error($th->getMessage(), $th, 422);
+        }
     }
 
     protected function getPlpPrograms(): array

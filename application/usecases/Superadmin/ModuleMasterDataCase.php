@@ -74,6 +74,38 @@ class ModuleMasterDataCase extends BaseCase
         ];
     }
 
+    public function deleteFromProgram(string $entity, int $entityId, int $programId): void
+    {
+        if (!array_key_exists($entity, $this->entityConfig)) {
+            throw new \InvalidArgumentException('Entity master data tidak dikenali.');
+        }
+
+        if ($entityId <= 0) {
+            throw new \InvalidArgumentException('ID data tidak valid.');
+        }
+
+        if ($programId <= 0) {
+            throw new \InvalidArgumentException('Program aktif tidak tersedia.');
+        }
+
+        switch ($entity) {
+            case 'mahasiswa':
+                $this->deleteStudentFromProgram($entityId, $programId);
+                break;
+            case 'dosen':
+                $this->deleteLecturerFromProgram($entityId, $programId);
+                break;
+            case 'guru':
+                $this->deleteTeacherFromProgram($entityId, $programId);
+                break;
+            case 'kepsek':
+                $this->deletePrincipalFromProgram($entityId, $programId);
+                break;
+            default:
+                throw new \InvalidArgumentException('Entity master data tidak dikenali.');
+        }
+    }
+
     private function filterRows(array $rows, string $entity, string $needle): array
     {
         $keys = $this->entityConfig[$entity]['searchable'] ?? [];
@@ -135,6 +167,81 @@ class ModuleMasterDataCase extends BaseCase
                 return $this->collectPrincipals($programId);
             default:
                 return [];
+        }
+    }
+
+    private function deleteStudentFromProgram(int $studentId, int $programId): void
+    {
+        $db = $this->CI->db;
+
+        try {
+            $db->trans_begin();
+
+            $programRows = $db->select('id')
+                ->from('program_mahasiswa')
+                ->where('id_program', $programId)
+                ->where('id_mahasiswa', $studentId)
+                ->get()
+                ->result_array();
+
+            if (empty($programRows)) {
+                throw new \RuntimeException('Data mahasiswa tidak ditemukan pada program aktif.');
+            }
+
+            $programIds = array_map('intval', array_column($programRows, 'id'));
+            if (!empty($programIds)) {
+                $db->where_in('id_program_mahasiswa', $programIds)
+                    ->delete('syarat_mapel');
+            }
+
+            $db->where('id_program', $programId)
+                ->where('id_mahasiswa', $studentId)
+                ->delete('program_mahasiswa');
+
+            if ($db->trans_status() === false) {
+                throw new \RuntimeException('Gagal menghapus data mahasiswa.');
+            }
+
+            $db->trans_commit();
+        } catch (\Throwable $e) {
+            $db->trans_rollback();
+            throw $e;
+        }
+    }
+
+    private function deleteLecturerFromProgram(int $lecturerId, int $programId): void
+    {
+        $db = $this->CI->db;
+        $db->where('id_program', $programId)
+            ->where('id_dosen', $lecturerId)
+            ->delete('program_dosen');
+
+        if ($db->affected_rows() <= 0) {
+            throw new \RuntimeException('Data dosen tidak ditemukan pada program aktif.');
+        }
+    }
+
+    private function deleteTeacherFromProgram(int $teacherId, int $programId): void
+    {
+        $db = $this->CI->db;
+        $db->where('id_program', $programId)
+            ->where('id_guru', $teacherId)
+            ->delete('program_guru');
+
+        if ($db->affected_rows() <= 0) {
+            throw new \RuntimeException('Data guru tidak ditemukan pada program aktif.');
+        }
+    }
+
+    private function deletePrincipalFromProgram(int $principalId, int $programId): void
+    {
+        $db = $this->CI->db;
+        $db->where('id_program', $programId)
+            ->where('id_kepsek', $principalId)
+            ->delete('program_kepsek');
+
+        if ($db->affected_rows() <= 0) {
+            throw new \RuntimeException('Data kepala sekolah tidak ditemukan pada program aktif.');
         }
     }
 
