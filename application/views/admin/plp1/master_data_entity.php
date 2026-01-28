@@ -40,17 +40,51 @@ $activeLabel = $hasActiveProgram
         </div>
     <?php endif; ?>
 
+    <?php if ($entityKey === 'mahasiswa' && $hasActiveProgram): ?>
+        <?php $stats = $mahasiswaStats ?? ['missing_school' => 0, 'missing_dosen' => 0]; ?>
+        <div class="row g-2 mb-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card border-0 bg-light">
+                    <div class="card-body py-2">
+                        <p class="text-muted small mb-1">Mahasiswa belum memiliki sekolah</p>
+                        <h6 class="mb-0"><?= number_format((int) ($stats['missing_school'] ?? 0)) ?></h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card border-0 bg-light">
+                    <div class="card-body py-2">
+                        <p class="text-muted small mb-1">Mahasiswa belum memiliki DPL</p>
+                        <h6 class="mb-0"><?= number_format((int) ($stats['missing_dosen'] ?? 0)) ?></h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <span class="fw-semibold"><?= htmlspecialchars($title) ?></span>
                 <div class="text-muted small">Data otomatis terfilter untuk program PLP I yang sedang aktif.</div>
             </div>
-            <?php if ($entityKey === 'mahasiswa' && $hasActiveProgram): ?>
-                <button type="button" class="btn btn-sm btn-primary" id="btnAddPlpMahasiswa">
-                    <i class="bi bi-plus-lg me-1"></i> Tambah Mahasiswa
-                </button>
-            <?php endif; ?>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <?php if ($entityKey === 'mahasiswa' && $hasActiveProgram): ?>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Filter:</span>
+                        <select class="form-select form-select-sm w-auto" id="plpMissingFilter">
+                            <option value="all" selected>Semua</option>
+                            <option value="school">Sekolah kosong</option>
+                            <option value="dosen">DPL kosong</option>
+                            <option value="guru">Guru pamong kosong</option>
+                            <option value="incomplete">Belum lengkap</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary" id="btnAddPlpMahasiswa">
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Mahasiswa
+                    </button>
+                <?php endif; ?>
+            </div>
         </div>
         <div class="card-body px-3 pb-3 pt-3">
             <div class="table-responsive">
@@ -229,6 +263,7 @@ $activeLabel = $hasActiveProgram
         const datatablePath = <?= json_encode($datatablePath, JSON_UNESCAPED_SLASHES) ?>;
         const isMahasiswa = <?= $entityKey === 'mahasiswa' ? 'true' : 'false' ?>;
         const isDosen = <?= $entityKey === 'dosen' ? 'true' : 'false' ?>;
+        const $missingFilter = $('#plpMissingFilter');
 
         function renderStatusBadge(status) {
             if (!status) {
@@ -333,7 +368,12 @@ $activeLabel = $hasActiveProgram
             serverSide: true,
             ajax: {
                 url: `${baseUrl}${datatablePath}`,
-                type: 'POST'
+                type: 'POST',
+                data: function (payload) {
+                    if ($missingFilter.length) {
+                        payload.missing_filter = $missingFilter.val() || 'all';
+                    }
+                }
             },
             language: {
                 sProcessing: "Sedang memproses...",
@@ -381,6 +421,12 @@ $activeLabel = $hasActiveProgram
 
         syncSortIcons();
         table.on('order.dt', syncSortIcons);
+
+        if ($missingFilter.length) {
+            $missingFilter.on('change', function () {
+                table.ajax.reload(null, false);
+            });
+        }
 
         if (isMahasiswa) {
             const detailModalEl = document.getElementById('studentDetailModal');

@@ -47,6 +47,11 @@ class ModuleMasterDataCase extends BaseCase
         $rows = $this->collectRows($entity, $programId);
         $count_total = count($rows);
 
+        $missingFilter = trim((string) ($params['filter_missing'] ?? ''));
+        if ($entity === 'mahasiswa' && $missingFilter !== '' && $missingFilter !== 'all') {
+            $rows = $this->filterMissingStudents($rows, $missingFilter);
+        }
+
         $search = trim((string) ($params['search'] ?? ''));
         if ($search !== '') {
             $rows = $this->filterRows($rows, $entity, $search);
@@ -329,9 +334,34 @@ class ModuleMasterDataCase extends BaseCase
             ->join('guru', 'guru.id = pm.id_guru', 'left')
             ->join('dosen', 'dosen.id = pm.id_dosen', 'left')
             ->where('pm.id_program', $programId)
+            ->where('pm.status', 'verified')
             ->order_by('mahasiswa.nama', 'ASC')
             ->get()
             ->result_array();
+    }
+
+    private function filterMissingStudents(array $rows, string $filter): array
+    {
+        $filter = strtolower(trim($filter));
+
+        return array_values(array_filter($rows, function ($row) use ($filter) {
+            $missingSchool = empty($row['id_sekolah']) || (int) $row['id_sekolah'] === 0;
+            $missingDosen = empty($row['id_dosen']) || (int) $row['id_dosen'] === 0;
+            $missingGuru = empty($row['id_guru']) || (int) $row['id_guru'] === 0;
+
+            switch ($filter) {
+                case 'school':
+                    return $missingSchool;
+                case 'dosen':
+                    return $missingDosen;
+                case 'guru':
+                    return $missingGuru;
+                case 'incomplete':
+                    return $missingSchool || $missingDosen || $missingGuru;
+                default:
+                    return true;
+            }
+        }));
     }
 
     private function collectTeachers(int $programId): array

@@ -1084,11 +1084,16 @@ class Plp1 extends Modulebaseadmin
 
         $activeProgram = $this->getActivePlpProgram();
         $config = $configs[$entityKey];
+        $mahasiswaStats = null;
+        if ($entityKey === 'mahasiswa' && $activeProgram) {
+            $mahasiswaStats = $this->getMahasiswaMissingStats((int) $activeProgram['id']);
+        }
         $viewData = [
             'activeProgram' => $activeProgram,
             'entityKey'     => $entityKey,
             'config'        => $config,
             'datatablePath' => sprintf('admin/plp1/master-data/%s/datatable', $entityKey),
+            'mahasiswaStats' => $mahasiswaStats,
         ];
 
         $title = sprintf('Admin PLP I - Master Data %s', $config['title']);
@@ -1108,6 +1113,10 @@ class Plp1 extends Modulebaseadmin
         $req['filter_program_code'] = 'plp1';
         $activeProgram = $this->getActivePlpProgram();
         $req['filter_program_id'] = $activeProgram ? (int) $activeProgram['id'] : 0;
+        $missingFilter = $this->input->post('missing_filter', true);
+        if ($missingFilter !== null && $missingFilter !== '') {
+            $req['filter_missing'] = $missingFilter;
+        }
 
         $uc = new ModuleMasterDataCase();
         $data = $uc->datatableByEntity($entityKey, $req);
@@ -1203,6 +1212,41 @@ class Plp1 extends Modulebaseadmin
             'description'    => $this->pageDescriptions[$pageKey] ?? '',
             'active_program' => $activeProgram,
             'summary'        => $summary,
+        ];
+    }
+
+    private function getMahasiswaMissingStats(int $programId): array
+    {
+        if ($programId <= 0) {
+            return [
+                'missing_school' => 0,
+                'missing_dosen' => 0,
+            ];
+        }
+
+        $missingSchool = (int) $this->db
+            ->from('program_mahasiswa')
+            ->where('id_program', $programId)
+            ->where('status', 'verified')
+            ->group_start()
+            ->where('id_sekolah IS NULL', null, false)
+            ->or_where('id_sekolah', 0)
+            ->group_end()
+            ->count_all_results();
+
+        $missingDosen = (int) $this->db
+            ->from('program_mahasiswa')
+            ->where('id_program', $programId)
+            ->where('status', 'verified')
+            ->group_start()
+            ->where('id_dosen IS NULL', null, false)
+            ->or_where('id_dosen', 0)
+            ->group_end()
+            ->count_all_results();
+
+        return [
+            'missing_school' => $missingSchool,
+            'missing_dosen' => $missingDosen,
         ];
     }
 
@@ -1330,6 +1374,7 @@ class Plp1 extends Modulebaseadmin
                 'columns'     => [
                     ['data' => 'student_name', 'label' => 'Mahasiswa'],
                     ['data' => 'nim', 'label' => 'NIM'],
+                    ['data' => 'program_studi', 'label' => 'Prodi'],
                     ['data' => 'school_name', 'label' => 'Sekolah'],
                     ['data' => 'teacher_name', 'label' => 'Guru Pamong'],
                     ['data' => 'lecturer_name', 'label' => 'DPL'],
